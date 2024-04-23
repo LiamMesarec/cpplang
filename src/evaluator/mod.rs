@@ -1,25 +1,27 @@
 use crate::parser::Node;
-use crate::tokenizer::{TokenInfo, Token};
+use crate::tokenizer::{Token, TokenInfo};
 
 #[derive(Debug)]
 pub enum Error {
     Generic(TokenInfo, String),
 }
 
-
 impl std::error::Error for Error {}
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::Generic(token_info, string) =>
-                write!(f, "Syntax error: unexpected token '{}' after {} on line {}", token_info.lexeme, string, token_info.start_position.row),
+            Error::Generic(token_info, string) => write!(
+                f,
+                "Syntax error: unexpected token '{}' after {} on line {}",
+                token_info.lexeme, string, token_info.start_position.row
+            ),
         }
     }
 }
 
 struct EvaluatorInfo {
-    ast: Box<Node>
+    ast: Box<Node>,
 }
 
 pub fn evaluate(ast: Box<Node>) -> Result<String, Error> {
@@ -43,7 +45,7 @@ fn evaluate_node(node: &Node) -> String {
     match node.token_info.token {
         Token::Let => let_definition(&node),
         Token::CppForwardedOperator | Token::Identifier | Token::Number => operator(&node),
-        _ => String::new()
+        _ => String::new(),
     }
 }
 
@@ -62,7 +64,10 @@ fn let_definition(node: &Node) -> String {
                     if let Some(it_right_side) = it.next() {
                         let right_side = evaluate_node(&(*it_right_side));
 
-                        output.push_str(&format!("const {} {} {} {};", _type, name, assignment_operator, right_side));
+                        output.push_str(&format!(
+                            "const {} {} {} {};",
+                            _type, name, assignment_operator, right_side
+                        ));
                     }
                 }
             }
@@ -74,6 +79,13 @@ fn let_definition(node: &Node) -> String {
 
 fn operator(node: &Node) -> String {
     let mut output = node.token_info.lexeme.clone();
-    output.push_str(&node.children.iter().map(|child| evaluate_node(&child)).collect::<Vec<String>>().join(""));
+    output.push_str(
+        &node
+            .children
+            .iter()
+            .map(|child| evaluate_node(&child))
+            .collect::<Vec<String>>()
+            .join(""),
+    );
     output
 }

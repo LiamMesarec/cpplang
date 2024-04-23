@@ -1,6 +1,6 @@
-use crate::tokenizer::{TokenInfo, Token};
+use crate::tokenizer::{Token, TokenInfo};
+use ptree::{Style, TreeItem};
 use std::borrow::Cow;
-use ptree::{TreeItem, Style};
 use std::io::Write;
 
 #[derive(Debug)]
@@ -12,7 +12,7 @@ pub enum Error {
     MissingClosingParantheses(TokenInfo),
     ExpectedStartingBrackets(TokenInfo),
     ExpectedStartingParantheses(TokenInfo),
-    MissingType(TokenInfo, String)
+    MissingType(TokenInfo, String),
 }
 
 impl std::error::Error for Error {}
@@ -20,30 +20,54 @@ impl std::error::Error for Error {}
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::Generic(token_info, string) =>
-                write!(f, "Syntax error: unexpected token '{}' after {} on line {}", token_info.lexeme, string, token_info.start_position.row),
-            Error::InvalidFor(token_info) =>
-                write!(f, "Syntax error: invalid for loop structure, unexpected token '{}' on line {}", token_info.lexeme, token_info.start_position.row),
-            Error::InvalidAssignment(token_info, string) =>
-                write!(f, "Syntax error: invalid assignment; found '{}' after {} on line {}", token_info.lexeme, string, token_info.start_position.row),
-            Error::MissingClosingBrackets(token_info) =>
-                write!(f, "Syntax error: missing closing brackets on line {}", token_info.start_position.row),
-            Error::MissingClosingParantheses(token_info) =>
-                write!(f, "Syntax error: missing closing parantheses on line {}", token_info.start_position.row),
-            Error::ExpectedStartingBrackets(token_info) =>
-                write!(f, "Syntax error: expected {{, found '{}' on line {}", token_info.lexeme, token_info.start_position.row),
-            Error::ExpectedStartingParantheses(token_info) =>
-                write!(f, "Syntax error: expected (, found '{}' on line {}", token_info.lexeme, token_info.start_position.row),
-            Error::MissingType(token_info, string) =>
-                write!(f, "Syntax error: expected ': Typename' after {}, found '{}' on line {}", token_info.lexeme, string, token_info.start_position.row),
+            Error::Generic(token_info, string) => write!(
+                f,
+                "Syntax error: unexpected token '{}' after {} on line {}",
+                token_info.lexeme, string, token_info.start_position.row
+            ),
+            Error::InvalidFor(token_info) => write!(
+                f,
+                "Syntax error: invalid for loop structure, unexpected token '{}' on line {}",
+                token_info.lexeme, token_info.start_position.row
+            ),
+            Error::InvalidAssignment(token_info, string) => write!(
+                f,
+                "Syntax error: invalid assignment; found '{}' after {} on line {}",
+                token_info.lexeme, string, token_info.start_position.row
+            ),
+            Error::MissingClosingBrackets(token_info) => write!(
+                f,
+                "Syntax error: missing closing brackets on line {}",
+                token_info.start_position.row
+            ),
+            Error::MissingClosingParantheses(token_info) => write!(
+                f,
+                "Syntax error: missing closing parantheses on line {}",
+                token_info.start_position.row
+            ),
+            Error::ExpectedStartingBrackets(token_info) => write!(
+                f,
+                "Syntax error: expected {{, found '{}' on line {}",
+                token_info.lexeme, token_info.start_position.row
+            ),
+            Error::ExpectedStartingParantheses(token_info) => write!(
+                f,
+                "Syntax error: expected (, found '{}' on line {}",
+                token_info.lexeme, token_info.start_position.row
+            ),
+            Error::MissingType(token_info, string) => write!(
+                f,
+                "Syntax error: expected ': Typename' after {}, found '{}' on line {}",
+                token_info.lexeme, string, token_info.start_position.row
+            ),
         }
     }
 }
 
 struct ParserInfo<'slice> {
-    tokens:  &'slice [TokenInfo],
+    tokens: &'slice [TokenInfo],
     current_token_info: TokenInfo,
-    i: usize
+    i: usize,
 }
 
 impl ParserInfo<'_> {
@@ -81,13 +105,17 @@ impl ParserInfo<'_> {
 #[derive(Debug, Clone)]
 pub struct Node {
     pub token_info: TokenInfo,
-    pub children: Vec<Box<Node>>
+    pub children: Vec<Box<Node>>,
 }
 
 impl TreeItem for Node {
     type Child = Self;
     fn write_self<W: Write>(&self, f: &mut W, _style: &Style) -> std::io::Result<()> {
-        write!(f, "{}, ({:?})", self.token_info.lexeme, self.token_info.token)
+        write!(
+            f,
+            "{}, ({:?})",
+            self.token_info.lexeme, self.token_info.token
+        )
     }
     fn children(&self) -> Cow<[Self::Child]> {
         Cow::Owned(self.children.iter().map(|node| *node.clone()).collect())
@@ -95,17 +123,17 @@ impl TreeItem for Node {
 }
 
 impl Node {
-    pub fn new_box(token_info: &TokenInfo) -> Box<Node>{
+    pub fn new_box(token_info: &TokenInfo) -> Box<Node> {
         Box::new(Node {
             token_info: token_info.clone(),
-            children: vec![]
+            children: vec![],
         })
     }
 
     pub fn new_empty_box() -> Box<Node> {
         Box::new(Node {
             token_info: TokenInfo::default(),
-            children: vec![]
+            children: vec![],
         })
     }
 }
@@ -116,7 +144,7 @@ pub fn parse(tokens: &[TokenInfo]) -> ParseResult {
     let mut parser_info = ParserInfo {
         tokens,
         current_token_info: TokenInfo::default(),
-        i: 0
+        i: 0,
     };
 
     let mut root = Node::new_empty_box();
@@ -132,7 +160,8 @@ pub fn parse(tokens: &[TokenInfo]) -> ParseResult {
 fn operator(parser_info: &mut ParserInfo) -> ParseResult {
     let mut node = primary(parser_info)?;
     while parser_info.match_token(Token::CppForwardedOperator) {
-        node.children.push(Node::new_box(&parser_info.current_token_info));
+        node.children
+            .push(Node::new_box(&parser_info.current_token_info));
         node.children.push(primary(parser_info)?);
     }
 
@@ -141,17 +170,25 @@ fn operator(parser_info: &mut ParserInfo) -> ParseResult {
 
 fn assignment(parser_info: &mut ParserInfo, mut parent: Box<Node>) -> ParseResult {
     if parser_info.match_token(Token::Identifier) {
-        parent.children.push(Node::new_box(&parser_info.current_token_info));
+        parent
+            .children
+            .push(Node::new_box(&parser_info.current_token_info));
 
         if parser_info.match_token(Token::Colon) {
-            parent.children.push(Node::new_box(&parser_info.current_token_info));
+            parent
+                .children
+                .push(Node::new_box(&parser_info.current_token_info));
 
             if parser_info.match_token(Token::Identifier) {
-                parent.children.push(Node::new_box(&parser_info.current_token_info));
+                parent
+                    .children
+                    .push(Node::new_box(&parser_info.current_token_info));
             }
 
             if parser_info.match_token(Token::AssignmentOperator) {
-                parent.children.push(Node::new_box(&parser_info.current_token_info));
+                parent
+                    .children
+                    .push(Node::new_box(&parser_info.current_token_info));
                 parent.children.push(operator(parser_info)?);
 
                 return Ok(parent);
@@ -159,56 +196,80 @@ fn assignment(parser_info: &mut ParserInfo, mut parent: Box<Node>) -> ParseResul
         }
     }
 
-    Err(Error::InvalidAssignment(parser_info.current_token_info.clone(), parser_info.last_n_token_lexemes(3)))
+    Err(Error::InvalidAssignment(
+        parser_info.current_token_info.clone(),
+        parser_info.last_n_token_lexemes(3),
+    ))
 }
 
 fn function_definition(parser_info: &mut ParserInfo, mut parent: Box<Node>) -> ParseResult {
     if parser_info.match_token(Token::Identifier) {
-        parent.children.push(Node::new_box(&parser_info.current_token_info));
+        parent
+            .children
+            .push(Node::new_box(&parser_info.current_token_info));
 
         if !parser_info.match_token(Token::LeftParantheses) {
-            return Err(Error::ExpectedStartingParantheses(parser_info.current_token_info.clone()))
+            return Err(Error::ExpectedStartingParantheses(
+                parser_info.current_token_info.clone(),
+            ));
         }
 
-        parent.children.push(Node::new_box(&parser_info.current_token_info));
-        
+        parent
+            .children
+            .push(Node::new_box(&parser_info.current_token_info));
+
         parent = parameter_list(parser_info, parent)?;
 
         if !parser_info.match_token(Token::RightParantheses) {
-            return Err(Error::MissingClosingParantheses(parser_info.current_token_info.clone()));
+            return Err(Error::MissingClosingParantheses(
+                parser_info.current_token_info.clone(),
+            ));
         }
 
-        parent.children.push(Node::new_box(&parser_info.current_token_info));
+        parent
+            .children
+            .push(Node::new_box(&parser_info.current_token_info));
 
         if parser_info.match_token(Token::Colon) {
-            parent.children.push(Node::new_box(&parser_info.current_token_info));
+            parent
+                .children
+                .push(Node::new_box(&parser_info.current_token_info));
 
             if parser_info.match_token(Token::Identifier) {
-                parent.children.push(Node::new_box(&parser_info.current_token_info));
+                parent
+                    .children
+                    .push(Node::new_box(&parser_info.current_token_info));
                 if parser_info.match_token(Token::LeftBraces) {
                     let mut node = Node::new_box(&parser_info.current_token_info);
                     node.children.push(operator(parser_info)?);
 
                     if !parser_info.match_token(Token::RightBraces) {
-                        return Err(Error::MissingClosingParantheses(parser_info.current_token_info.clone()));
+                        return Err(Error::MissingClosingParantheses(
+                            parser_info.current_token_info.clone(),
+                        ));
                     }
 
-                    node.children.push(Node::new_box(&parser_info.current_token_info));
+                    node.children
+                        .push(Node::new_box(&parser_info.current_token_info));
                     parent.children.push(node);
 
                     return Ok(parent);
                 }
-
             }
         }
     }
 
-    Err(Error::InvalidAssignment(parser_info.current_token_info.clone(), parser_info.last_n_token_lexemes(3)))
+    Err(Error::InvalidAssignment(
+        parser_info.current_token_info.clone(),
+        parser_info.last_n_token_lexemes(3),
+    ))
 }
 
 fn parameter_list(parser_info: &mut ParserInfo, mut parent: Box<Node>) -> ParseResult {
     while parser_info.match_token(Token::Identifier) {
-        parent.children.push(Node::new_box(&parser_info.current_token_info));
+        parent
+            .children
+            .push(Node::new_box(&parser_info.current_token_info));
 
         if !parser_info.match_token(Token::Colon) {
             return Err(Error::MissingType(
@@ -217,7 +278,9 @@ fn parameter_list(parser_info: &mut ParserInfo, mut parent: Box<Node>) -> ParseR
             ));
         }
 
-        parent.children.push(Node::new_box(&parser_info.current_token_info));
+        parent
+            .children
+            .push(Node::new_box(&parser_info.current_token_info));
 
         if !parser_info.match_token(Token::Identifier) {
             return Err(Error::MissingType(
@@ -226,13 +289,17 @@ fn parameter_list(parser_info: &mut ParserInfo, mut parent: Box<Node>) -> ParseR
             ));
         }
 
-        parent.children.push(Node::new_box(&parser_info.current_token_info));
+        parent
+            .children
+            .push(Node::new_box(&parser_info.current_token_info));
 
         if !parser_info.match_token(Token::Comma) {
             break;
         }
 
-        parent.children.push(Node::new_box(&parser_info.current_token_info));
+        parent
+            .children
+            .push(Node::new_box(&parser_info.current_token_info));
     }
 
     Ok(parent)
@@ -247,24 +314,29 @@ fn primary(parser_info: &mut ParserInfo) -> ParseResult {
         let mut node = Node::new_box(&parser_info.current_token_info);
         node.children.push(operator(parser_info)?);
         if !parser_info.match_token(Token::RightParantheses) {
-            return Err(Error::MissingClosingParantheses(parser_info.current_token_info.clone()));
+            return Err(Error::MissingClosingParantheses(
+                parser_info.current_token_info.clone(),
+            ));
         }
 
-        node.children.push(Node::new_box(&parser_info.current_token_info));
+        node.children
+            .push(Node::new_box(&parser_info.current_token_info));
 
         Ok(node)
     } else if parser_info.match_token(Token::LeftBraces) {
         let mut node = Node::new_box(&parser_info.current_token_info);
         node.children.push(operator(parser_info)?);
         if !parser_info.match_token(Token::RightBraces) {
-            return Err(Error::MissingClosingParantheses(parser_info.current_token_info.clone()));
+            return Err(Error::MissingClosingParantheses(
+                parser_info.current_token_info.clone(),
+            ));
         }
 
-        node.children.push(Node::new_box(&parser_info.current_token_info));
+        node.children
+            .push(Node::new_box(&parser_info.current_token_info));
 
         Ok(node)
     } else if parser_info.match_token(Token::Identifier) || parser_info.match_token(Token::Number) {
-
         Ok(Node::new_box(&parser_info.current_token_info))
     } else {
         Err(Error::Generic(

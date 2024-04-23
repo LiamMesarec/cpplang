@@ -4,7 +4,7 @@ use std::io::BufRead;
 pub enum Error {
     NotAKeyword(String),
     InvalidPattern(String, Position),
-    InvalidStream
+    InvalidStream,
 }
 
 impl std::error::Error for Error {}
@@ -12,12 +12,13 @@ impl std::error::Error for Error {}
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::NotAKeyword(lexeme) =>
-                write!(f, "Tokenizer error: not a keyword {}", lexeme),
-            Error::InvalidPattern(lexeme, position) =>
-                write!(f, "Tokenizer error: invalid pattern {} on line {}", lexeme, position.row),
-            Error::InvalidStream =>
-                write!(f, "Tokenizer error: invalid stream. Cannot read"),
+            Error::NotAKeyword(lexeme) => write!(f, "Tokenizer error: not a keyword {}", lexeme),
+            Error::InvalidPattern(lexeme, position) => write!(
+                f,
+                "Tokenizer error: invalid pattern {} on line {}",
+                lexeme, position.row
+            ),
+            Error::InvalidStream => write!(f, "Tokenizer error: invalid stream. Cannot read"),
         }
     }
 }
@@ -70,7 +71,7 @@ pub enum Token {
     End,
 
     EOF,
-    Error
+    Error,
 }
 
 const MAX_STATE: usize = Token::Error as usize;
@@ -78,21 +79,21 @@ const MAX_STATE: usize = Token::Error as usize;
 #[derive(Debug, Copy, Clone, PartialEq, Default)]
 pub struct Position {
     pub row: u32,
-    pub col: u32
+    pub col: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct TokenInfo {
     pub token: Token,
     pub lexeme: String,
-    pub start_position: Position
+    pub start_position: Position,
 }
 
 struct DFA {
     num_states: usize,
     alphabet: [char; 256],
     last: char,
-    position: Position
+    position: Position,
 }
 
 pub fn tokenize<R: BufRead>(mut tokens_reader: R) -> Result<Vec<TokenInfo>, Error> {
@@ -100,7 +101,7 @@ pub fn tokenize<R: BufRead>(mut tokens_reader: R) -> Result<Vec<TokenInfo>, Erro
         num_states: MAX_STATE,
         alphabet: [char::default(); 256],
         last: char::default(),
-        position: Position { row: 1, col: 1 }
+        position: Position { row: 1, col: 1 },
     };
 
     let mut vec = Vec::new();
@@ -118,31 +119,30 @@ pub fn tokenize<R: BufRead>(mut tokens_reader: R) -> Result<Vec<TokenInfo>, Erro
 
                 token_info = match get_token(&mut tokens_reader, &mut dfa) {
                     Ok(token_info) => token_info,
-                    Err(error) => return Err(error)
+                    Err(error) => return Err(error),
                 }
             }
-        },
+        }
 
-        Err(error) => return Err(error)
+        Err(error) => return Err(error),
     };
 
     vec.push(TokenInfo {
         token: Token::EOF,
         lexeme: String::from(""),
-        start_position: dfa.position
+        start_position: dfa.position,
     });
 
     Ok(vec)
 }
 
-fn get_token<R: BufRead>(mut tokens_reader: R, dfa: &mut DFA) -> Result<TokenInfo, Error>
-{
+fn get_token<R: BufRead>(mut tokens_reader: R, dfa: &mut DFA) -> Result<TokenInfo, Error> {
     let transitions_table = create_transitions_table(dfa.alphabet.len(), dfa.num_states);
     let mut buffer = [0; 1];
     let mut token_info = TokenInfo {
         token: Token::None,
         lexeme: String::from(""),
-        start_position: dfa.position
+        start_position: dfa.position,
     };
 
     let mut state = Token::None;
@@ -154,8 +154,7 @@ fn get_token<R: BufRead>(mut tokens_reader: R, dfa: &mut DFA) -> Result<TokenInf
         if code != '\n' && code != ' ' && code != '\t' {
             token_info.start_position = prev_position(dfa.position, code);
         }
-    }
-    else {
+    } else {
         if tokens_reader.read(&mut buffer).unwrap() > 0 {
             code = buffer[0] as char;
             dfa.position = next_position(dfa.position, code);
@@ -173,7 +172,10 @@ fn get_token<R: BufRead>(mut tokens_reader: R, dfa: &mut DFA) -> Result<TokenInf
 
         if state == Token::None && next_state == Token::None && code != char::default() {
             token_info.lexeme.push(code);
-            return Err(Error::InvalidPattern(token_info.lexeme, token_info.start_position));
+            return Err(Error::InvalidPattern(
+                token_info.lexeme,
+                token_info.start_position,
+            ));
         }
 
         if next_state == Token::None {
@@ -211,7 +213,7 @@ fn assign_if_reserved_identifier(token_info: &TokenInfo) -> Token {
         "mut" => Token::Mut,
         "fn" => Token::Fn,
         "return" => Token::Return,
-        _ => token_info.token
+        _ => token_info.token,
     }
 }
 

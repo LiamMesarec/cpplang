@@ -1,5 +1,3 @@
-
-
 pub enum Int {
     U8,
     U16,
@@ -18,12 +16,12 @@ impl Int {
             Int::U16 => "uint_16t",
             Int::U32 => "uint_32t",
             Int::U64 => "uint_64t",
-            _ => "unimplemented type"
+            _ => "unimplemented type",
         }
     }
 }
 
 pub enum Type {
     Int(Int),
-    Bool
+    Bool,
 }

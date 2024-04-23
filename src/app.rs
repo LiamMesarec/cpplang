@@ -3,11 +3,9 @@ use std::fs;
 
 #[derive(Subcommand, Clone, Debug)]
 pub enum Command {
-    New {
-        name: String,
-    },
+    New { name: String },
     Build,
-    Run
+    Run,
 }
 
 impl Command {
@@ -29,8 +27,6 @@ impl Command {
             Command::Run => println!("run"),
         }
     }
-
-
 }
 
 #[derive(Parser)]
@@ -48,6 +44,6 @@ pub fn parse() {
 
     match cli.command {
         Some(command) => command.execute(),
-        None => println!("none")
+        None => println!("none"),
     }
 }
