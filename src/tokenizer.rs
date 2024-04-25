@@ -58,6 +58,8 @@ pub enum Token {
     LowerThan,
     Comparison,
     Semicolon,
+    If,
+    Else,
     For,
     While,
     In,
@@ -214,6 +216,8 @@ fn assign_if_reserved_identifier(token_info: &TokenInfo) -> Token {
         "mut" => Token::Mut,
         "fn" => Token::Fn,
         "return" => Token::Return,
+        "if" => Token::If,
+        "else" => Token::Else,
         _ => token_info.token,
     }
 }

@@ -3,8 +3,10 @@ use ptree::{Style, TreeItem};
 use std::borrow::Cow;
 use std::io::Write;
 
-mod range;
+mod body;
 mod for_;
+mod if_;
+mod range;
 
 #[derive(Debug)]
 pub enum Error {
@@ -160,7 +162,7 @@ pub fn parse(tokens: &[TokenInfo]) -> ParseResult {
     Ok(root)
 }
 
-fn operator(parser_info: &mut ParserInfo) -> ParseResult {
+pub fn operator(parser_info: &mut ParserInfo) -> ParseResult {
     let mut node = primary(parser_info)?;
     while parser_info.match_token(Token::CppForwardedOperator) {
         node.children
@@ -315,6 +317,8 @@ fn primary(parser_info: &mut ParserInfo) -> ParseResult {
         return function_definition(parser_info, Node::new_box(&parser_info.current_token_info));
     } else if parser_info.match_token(Token::For) {
         return for_::for_(parser_info, Node::new_box(&parser_info.current_token_info));
+    } else if parser_info.match_token(Token::If) {
+        return if_::if_(parser_info, Node::new_box(&parser_info.current_token_info));
     } else if parser_info.match_token(Token::LeftParantheses) {
         let mut node = Node::new_box(&parser_info.current_token_info);
         node.children.push(operator(parser_info)?);
@@ -329,18 +333,7 @@ fn primary(parser_info: &mut ParserInfo) -> ParseResult {
 
         Ok(node)
     } else if parser_info.match_token(Token::LeftBraces) {
-        let mut node = Node::new_box(&parser_info.current_token_info);
-        node.children.push(operator(parser_info)?);
-        if !parser_info.match_token(Token::RightBraces) {
-            return Err(Error::MissingClosingParantheses(
-                parser_info.current_token_info.clone(),
-            ));
-        }
-
-        node.children
-            .push(Node::new_box(&parser_info.current_token_info));
-
-        Ok(node)
+        return body::body(parser_info, Node::new_box(&parser_info.current_token_info));
     } else if parser_info.match_token(Token::Identifier) || parser_info.match_token(Token::Number) {
         Ok(Node::new_box(&parser_info.current_token_info))
     } else {
