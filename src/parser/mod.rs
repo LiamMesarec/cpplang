@@ -3,10 +3,13 @@ use ptree::{Style, TreeItem};
 use std::borrow::Cow;
 use std::io::Write;
 
+mod range;
+mod for_;
+
 #[derive(Debug)]
 pub enum Error {
     Generic(TokenInfo, String),
-    InvalidFor(TokenInfo),
+    InvalidFor(TokenInfo, String),
     InvalidAssignment(TokenInfo, String),
     MissingClosingBrackets(TokenInfo),
     MissingClosingParantheses(TokenInfo),
@@ -25,10 +28,10 @@ impl std::fmt::Display for Error {
                 "Syntax error: unexpected token '{}' after {} on line {}",
                 token_info.lexeme, string, token_info.start_position.row
             ),
-            Error::InvalidFor(token_info) => write!(
+            Error::InvalidFor(token_info, string) => write!(
                 f,
-                "Syntax error: invalid for loop structure, unexpected token '{}' on line {}",
-                token_info.lexeme, token_info.start_position.row
+                "Syntax error: invalid for loop structure, unexpected token '{}' on line {}. {}",
+                token_info.lexeme, token_info.start_position.row, string
             ),
             Error::InvalidAssignment(token_info, string) => write!(
                 f,
@@ -138,7 +141,7 @@ impl Node {
     }
 }
 
-type ParseResult = Result<Box<Node>, Error>;
+pub type ParseResult = Result<Box<Node>, Error>;
 
 pub fn parse(tokens: &[TokenInfo]) -> ParseResult {
     let mut parser_info = ParserInfo {
@@ -310,6 +313,8 @@ fn primary(parser_info: &mut ParserInfo) -> ParseResult {
         return assignment(parser_info, Node::new_box(&parser_info.current_token_info));
     } else if parser_info.match_token(Token::Fn) {
         return function_definition(parser_info, Node::new_box(&parser_info.current_token_info));
+    } else if parser_info.match_token(Token::For) {
+        return for_::for_(parser_info, Node::new_box(&parser_info.current_token_info));
     } else if parser_info.match_token(Token::LeftParantheses) {
         let mut node = Node::new_box(&parser_info.current_token_info);
         node.children.push(operator(parser_info)?);

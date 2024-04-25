@@ -61,6 +61,7 @@ pub enum Token {
     For,
     While,
     In,
+    Dot,
     Range,
     Ignore,
     EOT,
@@ -285,6 +286,10 @@ fn create_transitions_table(alphabet_len: usize, num_states: usize) -> Vec<Vec<T
     set_transition(Token::None, ')', Token::RightParantheses);
     set_transition(Token::None, '{', Token::LeftBraces);
     set_transition(Token::None, '}', Token::RightBraces);
+
+
+    set_transition(Token::None, '.', Token::Dot);
+    set_transition(Token::Dot, '.', Token::Range);
 
     set_transition(Token::None, Token::EOF as u8 as char, Token::EOF);
     transitions_table

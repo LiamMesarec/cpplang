@@ -36,7 +36,7 @@ fn functions() {
     assert!(is_parsable(
         r#"
     fn main(): u32 {
-        0 
+        0
     }
 "#
     ));
@@ -44,7 +44,26 @@ fn functions() {
     assert!(is_parsable(
         r#"
     fn func(i: i32): u32 {
-        0 
+        0
+    }
+"#
+    ));
+}
+
+#[test]
+fn for_() {
+    assert!(is_parsable(
+        r#"
+    for i in array {
+        i
+    }
+"#
+    ));
+
+    assert!(is_parsable(
+        r#"
+    for i in 0..9 {
+        i
     }
 "#
     ));

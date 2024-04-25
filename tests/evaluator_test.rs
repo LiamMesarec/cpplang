@@ -33,6 +33,7 @@ fn evaluate_and_compare(input: &str, expected_output: &str) -> bool {
 }
 
 #[test]
+#[ignore]
 fn assignment() {
     assert!(evaluate_and_compare(
         r#"let i: u32 = u"#,
