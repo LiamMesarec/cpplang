@@ -287,7 +287,6 @@ fn create_transitions_table(alphabet_len: usize, num_states: usize) -> Vec<Vec<T
     set_transition(Token::None, '{', Token::LeftBraces);
     set_transition(Token::None, '}', Token::RightBraces);
 
-
     set_transition(Token::None, '.', Token::Dot);
     set_transition(Token::Dot, '.', Token::Range);
 
