@@ -1,7 +1,7 @@
 use crate::parser::{Error, Node, ParseResult, ParserInfo};
 use crate::tokenizer::Token;
 
-pub fn declaration(parser_info: &mut ParserInfo, mut parent: Box<Node>) -> ParseResult {
+pub fn declaration(parser_info: &mut ParserInfo) -> ParseResult {
     if !parser_info.match_token(Token::Identifier) {
         return Err(Error::InvalidFor(
             parser_info.current_token_info.clone(),
@@ -9,38 +9,35 @@ pub fn declaration(parser_info: &mut ParserInfo, mut parent: Box<Node>) -> Parse
         ));
     }
 
-    parent
-        .children
-        .push(Node::new_box(&parser_info.current_token_info));
+    let node = Node::new_box(&parser_info.current_token_info);
 
-    Ok(Box::new(*parent))
+    Ok(node)
 }
 
-pub fn expression(parser_info: &mut ParserInfo, mut parent: Box<Node>) -> ParseResult {
+pub fn expression(parser_info: &mut ParserInfo) -> ParseResult {
     if parser_info.match_token(Token::Identifier) {
-        parent
-            .children
-            .push(Node::new_box(&parser_info.current_token_info));
-        return Ok(parent);
+        return Ok(Node::new_box(&parser_info.current_token_info));
     }
 
     if parser_info.match_token(Token::Number) {
-        parent
-            .children
-            .push(Node::new_box(&parser_info.current_token_info));
+        let mut node = Node::new_box(&parser_info.current_token_info);
 
         if parser_info.match_token(Token::Range) {
-            parent
+            node
                 .children
                 .push(Node::new_box(&parser_info.current_token_info));
 
             if parser_info.match_token(Token::Number) {
-                parent
+                node
                     .children
                     .push(Node::new_box(&parser_info.current_token_info));
+                return Ok(node);
             }
         }
     }
 
-    Ok(parent)
+    return Err(Error::InvalidFor(
+            parser_info.current_token_info.clone(),
+            String::from("Invalid expression"),
+        ));
 }

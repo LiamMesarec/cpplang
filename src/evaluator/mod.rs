@@ -44,7 +44,7 @@ fn evaluate_recursive(node: &Node) -> String {
 fn evaluate_node(node: &Node) -> String {
     match node.token_info.token {
         Token::Let => let_definition(&node),
-        Token::CppForwardedOperator | Token::Identifier | Token::Number => operator(&node),
+        Token::Equals | Token::Identifier | Token::Number => operator(&node),
         _ => String::new(),
     }
 }

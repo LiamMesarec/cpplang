@@ -86,6 +86,17 @@ impl ParserInfo<'_> {
         false
     }
 
+    fn match_any_of(&mut self, expected_tokens: &[Token]) -> bool {
+        self.current_token_info = self.tokens[self.i].clone();
+        if let Some(token) = self.tokens.get(self.i) {
+            if expected_tokens.iter().any(|&expected_token| token.token == expected_token) {
+                self.i += 1;
+                return true;
+            }
+        }
+        false
+    }
+
     fn last_n_token_lexemes(&self, n: usize) -> String {
         let mut counter = 1;
         let mut string: String = String::from("");
@@ -164,7 +175,7 @@ pub fn parse(tokens: &[TokenInfo]) -> ParseResult {
 
 pub fn operator(parser_info: &mut ParserInfo) -> ParseResult {
     let mut node = primary(parser_info)?;
-    while parser_info.match_token(Token::CppForwardedOperator) {
+    while parser_info.match_token(Token::Equals) {
         node.children
             .push(Node::new_box(&parser_info.current_token_info));
         node.children.push(primary(parser_info)?);
@@ -190,7 +201,7 @@ fn assignment(parser_info: &mut ParserInfo, mut parent: Box<Node>) -> ParseResul
                     .push(Node::new_box(&parser_info.current_token_info));
             }
 
-            if parser_info.match_token(Token::AssignmentOperator) {
+            if parser_info.match_token(Token::Assignment) {
                 parent
                     .children
                     .push(Node::new_box(&parser_info.current_token_info));
@@ -316,9 +327,9 @@ fn primary(parser_info: &mut ParserInfo) -> ParseResult {
     } else if parser_info.match_token(Token::Fn) {
         return function_definition(parser_info, Node::new_box(&parser_info.current_token_info));
     } else if parser_info.match_token(Token::For) {
-        return for_::for_(parser_info, Node::new_box(&parser_info.current_token_info));
+        return for_::for_(parser_info);
     } else if parser_info.match_token(Token::If) {
-        return if_::if_(parser_info, Node::new_box(&parser_info.current_token_info));
+        return if_::if_(parser_info);
     } else if parser_info.match_token(Token::LeftParantheses) {
         let mut node = Node::new_box(&parser_info.current_token_info);
         node.children.push(operator(parser_info)?);
@@ -333,7 +344,7 @@ fn primary(parser_info: &mut ParserInfo) -> ParseResult {
 
         Ok(node)
     } else if parser_info.match_token(Token::LeftBraces) {
-        return body::body(parser_info, Node::new_box(&parser_info.current_token_info));
+        return body::body(parser_info);
     } else if parser_info.match_token(Token::Identifier) || parser_info.match_token(Token::Number) {
         Ok(Node::new_box(&parser_info.current_token_info))
     } else {

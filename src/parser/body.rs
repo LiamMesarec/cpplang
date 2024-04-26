@@ -1,19 +1,28 @@
 use crate::parser::operator;
-use crate::parser::range;
+
 use crate::parser::{Error, Node, ParseResult, ParserInfo};
 use crate::tokenizer::Token;
 
-pub fn body(parser_info: &mut ParserInfo, mut parent: Box<Node>) -> ParseResult {
-    parent.children.push(operator(parser_info)?);
-    if !parser_info.match_token(Token::RightBraces) {
-        return Err(Error::MissingClosingParantheses(
+pub fn body(parser_info: &mut ParserInfo) -> ParseResult {
+    if !parser_info.match_token(Token::LeftBraces) {
+        return Err(Error::ExpectedStartingBrackets(
             parser_info.current_token_info.clone(),
         ));
     }
 
-    parent
+    let mut node = Node::new_box(&parser_info.current_token_info);
+
+    node.children.push(operator(parser_info)?);
+
+    if !parser_info.match_token(Token::RightBraces) {
+        return Err(Error::MissingClosingBrackets(
+            parser_info.current_token_info.clone(),
+        ));
+    }
+
+   node 
         .children
         .push(Node::new_box(&parser_info.current_token_info));
 
-    Ok(parent)
+    Ok(node)
 }

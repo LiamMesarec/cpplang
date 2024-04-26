@@ -23,24 +23,25 @@ impl std::fmt::Display for Error {
     }
 }
 
+// TODO if there is too many tokens the tokenizer stops working and shows next_token as EOF
 #[derive(Debug, Copy, Clone, PartialEq, Default)]
 pub enum Token {
     #[default]
     None = 0,
 
     Identifier,
-    CppForwardedOperator,
-    AssignmentOperator,
     Colon,
     Comma,
     Number,
+    Star,
+    Modulo,
 
     Let,
     Mut,
+    Interpret,
     Fn,
     Return,
 
-    ComparisonEquals,
     Multiplication,
     Division,
     Addition,
@@ -56,7 +57,7 @@ pub enum Token {
     Assignment,
     GreaterThan,
     LowerThan,
-    Comparison,
+    Equals,
     Semicolon,
     If,
     Else,
@@ -67,11 +68,6 @@ pub enum Token {
     Range,
     Ignore,
     EOT,
-
-    To,
-    Begin,
-    Console,
-    End,
 
     EOF,
     Error,
@@ -218,6 +214,7 @@ fn assign_if_reserved_identifier(token_info: &TokenInfo) -> Token {
         "return" => Token::Return,
         "if" => Token::If,
         "else" => Token::Else,
+        "interpret" => Token::Interpret,
         _ => token_info.token,
     }
 }
@@ -241,24 +238,22 @@ fn create_transitions_table(alphabet_len: usize, num_states: usize) -> Vec<Vec<T
         }
     };
 
-    let mut set_full_transitions = |transitions: &[(&str, Token)]| {
+    let _set_full_transitions = |transitions: &[(&str, Token)]| {
         for &(s, to) in transitions {
             set_full_transition(s, to);
         }
     };
 
-    set_full_transitions(&[
-        ("=", Token::AssignmentOperator),
-        ("%", Token::CppForwardedOperator),
-        ("/", Token::CppForwardedOperator),
-        ("*", Token::CppForwardedOperator),
-        ("-", Token::CppForwardedOperator),
-        ("+", Token::CppForwardedOperator),
-        (",", Token::Comma),
-    ]);
+    set_transition(Token::None, '=', Token::Assignment);
+    set_transition(Token::None, '*', Token::Star);
+    set_transition(Token::None, '%', Token::Modulo);
+    set_transition(Token::None, '/', Token::Division);
+    set_transition(Token::None, '+', Token::Addition);
+    set_transition(Token::None, '-', Token::Subtraction);
+    set_transition(Token::None, ',', Token::Comma);
 
     set_transition(Token::None, ':', Token::Colon);
-    set_transition(Token::AssignmentOperator, '=', Token::CppForwardedOperator);
+    set_transition(Token::Assignment, '=', Token::Equals);
 
     for i in '0'..='9' {
         set_transition(Token::None, i, Token::Number);

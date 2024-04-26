@@ -9,6 +9,7 @@ fn tokenize_and_compare(input: &str, expected_output: &[TokenInfo]) -> bool {
         Ok(tokens) => {
             let result = tokens.iter().eq(expected_output);
             if !result {
+                println!("{:?}", tokens);
                 for (result_token, expected_token) in tokens.iter().zip(expected_output.iter()) {
                     if result_token != expected_token {
                         println!("result: {:?}", result_token);
@@ -76,17 +77,17 @@ fn operators() {
         "==\n= *",
         &[
             TokenInfo {
-                token: Token::CppForwardedOperator,
+                token: Token::Equals,
                 lexeme: String::from("=="),
                 start_position: Position { row: 1, col: 1 }
             },
             TokenInfo {
-                token: Token::AssignmentOperator,
+                token: Token::Assignment,
                 lexeme: String::from("="),
                 start_position: Position { row: 2, col: 1 }
             },
             TokenInfo {
-                token: Token::CppForwardedOperator,
+                token: Token::Star,
                 lexeme: String::from("*"),
                 start_position: Position { row: 2, col: 3 }
             },

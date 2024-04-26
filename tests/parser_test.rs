@@ -12,6 +12,7 @@ fn is_parsable(input: &str) -> bool {
             }
             Err(error) => {
                 println!("{}", error);
+                println!("{:?}", tokens);
                 return false;
             }
         },
@@ -65,6 +66,27 @@ fn for_() {
         r#"
     for i in 0..9 {
         i
+    }
+"#
+    ));
+}
+
+#[test]
+fn if_() {
+    assert!(is_parsable(
+        r#"
+    if i == 10 {
+        20
+    }
+"#
+    ));
+
+    assert!(is_parsable(
+        r#"
+    if i == 12 {
+        20
+    } else {
+        i == 10
     }
 "#
     ));
