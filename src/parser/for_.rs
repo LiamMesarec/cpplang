@@ -1,5 +1,5 @@
-use crate::parser::range;
 use crate::parser::body;
+use crate::parser::range;
 use crate::parser::{Error, Node, ParseResult, ParserInfo};
 use crate::tokenizer::Token;
 
@@ -16,8 +16,7 @@ pub fn for_(parser_info: &mut ParserInfo) -> ParseResult {
         ));
     }
 
-   node 
-        .children
+    node.children
         .push(Node::new_box(&parser_info.current_token_info));
 
     node.children.push(range::expression(parser_info)?);

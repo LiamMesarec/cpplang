@@ -16,8 +16,7 @@ pub fn if_(parser_info: &mut ParserInfo) -> ParseResult {
         return Ok(node);
     }
 
-    node
-        .children
+    node.children
         .push(Node::new_box(&parser_info.current_token_info));
 
     node.children.push(body::body(parser_info)?);

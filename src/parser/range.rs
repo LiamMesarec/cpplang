@@ -23,13 +23,11 @@ pub fn expression(parser_info: &mut ParserInfo) -> ParseResult {
         let mut node = Node::new_box(&parser_info.current_token_info);
 
         if parser_info.match_token(Token::Range) {
-            node
-                .children
+            node.children
                 .push(Node::new_box(&parser_info.current_token_info));
 
             if parser_info.match_token(Token::Number) {
-                node
-                    .children
+                node.children
                     .push(Node::new_box(&parser_info.current_token_info));
                 return Ok(node);
             }
@@ -37,7 +35,7 @@ pub fn expression(parser_info: &mut ParserInfo) -> ParseResult {
     }
 
     return Err(Error::InvalidFor(
-            parser_info.current_token_info.clone(),
-            String::from("Invalid expression"),
-        ));
+        parser_info.current_token_info.clone(),
+        String::from("Invalid expression"),
+    ));
 }

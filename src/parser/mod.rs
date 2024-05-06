@@ -89,7 +89,10 @@ impl ParserInfo<'_> {
     fn match_any_of(&mut self, expected_tokens: &[Token]) -> bool {
         self.current_token_info = self.tokens[self.i].clone();
         if let Some(token) = self.tokens.get(self.i) {
-            if expected_tokens.iter().any(|&expected_token| token.token == expected_token) {
+            if expected_tokens
+                .iter()
+                .any(|&expected_token| token.token == expected_token)
+            {
                 self.i += 1;
                 return true;
             }
