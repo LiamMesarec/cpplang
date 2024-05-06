@@ -1,0 +1,7 @@
+#!/bin/sh
+
+if ! cargo test
+then
+    echo "Tests failed, run 'cargo test' and fix the failed tests before pushing."
+    exit 1
+fi

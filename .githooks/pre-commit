@@ -1,0 +1,15 @@
+#!/bin/bash
+
+echo "Formatting code with 'cargo fmt' ..."
+if cargo fmt; then
+    echo "Code already formatted"
+else
+    echo "Code successfully formatted"
+fi
+
+echo "Fixing code with 'cargo fix' ..."
+if cargo fix --allow-dirty; then
+    echo "Code successfully fixed"
+else
+    echo "No issues found or failed to fix"
+fi
