@@ -20,8 +20,7 @@ pub fn body(parser_info: &mut ParserInfo) -> ParseResult {
         ));
     }
 
-   node 
-        .children
+    node.children
         .push(Node::new_box(&parser_info.current_token_info));
 
     Ok(node)
