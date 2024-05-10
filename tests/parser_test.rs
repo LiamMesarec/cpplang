@@ -91,3 +91,16 @@ fn if_() {
 "#
     ));
 }
+
+#[test]
+fn struct_() {
+    assert!(is_parsable(
+        r#"
+    struct Struct {
+        age: u32
+        name: String
+    }
+"#
+    ));
+
+}
