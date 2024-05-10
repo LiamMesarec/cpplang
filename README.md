@@ -1,5 +1,9 @@
 # CPP2 (WIP)
 
+## Setup
+
+Run git 'config --local core.hooksPath .githooks/' after cloning.
+
 ## Features
 
 <table>
