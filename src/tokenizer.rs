@@ -41,13 +41,14 @@ pub enum Token {
     Interpret,
     Fn,
     Return,
+    Match,
+    Struct,
+    Arrow,
 
     Multiplication,
     Division,
     Addition,
     Subtraction,
-    BWAnd,
-    BWOr,
     Int,
     Hex,
     LeftParantheses,
@@ -215,6 +216,8 @@ fn assign_if_reserved_identifier(token_info: &TokenInfo) -> Token {
         "if" => Token::If,
         "else" => Token::Else,
         "interpret" => Token::Interpret,
+        "match" => Token::Match,
+        "struct" => Token::Struct,
         _ => token_info.token,
     }
 }
@@ -245,6 +248,7 @@ fn create_transitions_table(alphabet_len: usize, num_states: usize) -> Vec<Vec<T
     };
 
     set_transition(Token::None, '=', Token::Assignment);
+    set_transition(Token::Assignment, '>', Token::Arrow);
     set_transition(Token::None, '*', Token::Star);
     set_transition(Token::None, '%', Token::Modulo);
     set_transition(Token::None, '/', Token::Division);
