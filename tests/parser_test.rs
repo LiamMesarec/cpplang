@@ -93,6 +93,25 @@ fn if_() {
 }
 
 #[test]
+fn match_() {
+    assert!(is_parsable(
+        r#"
+    match i {
+    	1 => 10
+    }
+"#
+    ));
+assert!(is_parsable(
+        r#"
+    match i {
+    	i => 1 == 3
+    	i  => 2 == 3
+    }
+"#
+    ));
+}
+
+#[test]
 fn struct_() {
     assert!(is_parsable(
         r#"

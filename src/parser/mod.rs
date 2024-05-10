@@ -6,6 +6,7 @@ use std::io::Write;
 mod body;
 mod for_;
 mod if_;
+mod match_;
 mod range;
 mod struct_;
 
@@ -334,7 +335,9 @@ fn primary(parser_info: &mut ParserInfo) -> ParseResult {
         return for_::for_(parser_info);
     } else if parser_info.match_token(Token::If) {
         return if_::if_(parser_info);
-    }  else if parser_info.match_token(Token::Struct) {
+    } else if parser_info.match_token(Token::Match) {
+        return match_::match_(parser_info);
+    } else if parser_info.match_token(Token::Struct) {
         return struct_::struct_(parser_info);
     } else if parser_info.match_token(Token::LeftParantheses) {
         let mut node = Node::new_box(&parser_info.current_token_info);
