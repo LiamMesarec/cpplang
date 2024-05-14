@@ -7,7 +7,7 @@ use crate::tokenizer::Token;
 pub fn match_(parser_info: &mut ParserInfo) -> ParseResult {
     let mut node = Node::new_box(&parser_info.current_token_info);
 
-    node.children.push(operator(parser_info)?);
+    let mut node_identifier = operator(parser_info)?;
 
     if !parser_info.match_token(Token::LeftBraces) {
         return Err(Error::ExpectedStartingBrackets(
@@ -17,12 +17,8 @@ pub fn match_(parser_info: &mut ParserInfo) -> ParseResult {
 
     let mut node_opening_braces = Node::new_box(&parser_info.current_token_info);
 
-    let _node_arrow = Node::new_box(&parser_info.current_token_info);
-
     while parser_info.match_any_of(&[Token::Number, Token::Identifier]) {
-        node_opening_braces
-            .children
-            .push(Node::new_box(&parser_info.current_token_info));
+        let mut node_match = Node::new_box(&parser_info.current_token_info);
 
         if !parser_info.match_token(Token::Arrow) {
             return Err(Error::ExpectedStartingBrackets(
@@ -35,7 +31,9 @@ pub fn match_(parser_info: &mut ParserInfo) -> ParseResult {
 
         node_arrow.children.push(operator(parser_info)?);
 
-        node_opening_braces.children.push(node_arrow);
+        node_match.children.push(node_arrow);
+
+        node_opening_braces.children.push(node_match);
     }
     // TODO last case in match must be _
     if !parser_info.match_token(Token::RightBraces) {
@@ -43,11 +41,14 @@ pub fn match_(parser_info: &mut ParserInfo) -> ParseResult {
             parser_info.current_token_info.clone(),
         ));
     }
+
     node_opening_braces
         .children
         .push(Node::new_box(&parser_info.current_token_info));
 
-    node.children.push(node_opening_braces);
+    node_identifier.children.push(node_opening_braces);
+
+    node.children.push(node_identifier);
 
     Ok(node)
 }
