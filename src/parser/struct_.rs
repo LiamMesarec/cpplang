@@ -1,4 +1,4 @@
-use crate::parser::operator;
+
 
 use crate::parser::{Error, Node, ParseResult, ParserInfo};
 use crate::tokenizer::Token;
@@ -14,12 +14,12 @@ pub fn struct_(parser_info: &mut ParserInfo) -> ParseResult {
     if !parser_info.match_token(Token::Identifier) {
         return Err(Error::Generic(
             parser_info.current_token_info.clone(),
-            String::from("Expected struct name")
+            String::from("Expected struct name"),
         ));
     }
 
-    node.children.push(Node::new_box(&parser_info.current_token_info));
-    println!("{:?}", &parser_info.current_token_info);
+    node.children
+        .push(Node::new_box(&parser_info.current_token_info));
 
     if !parser_info.match_token(Token::LeftBraces) {
         return Err(Error::ExpectedStartingBrackets(
@@ -27,11 +27,7 @@ pub fn struct_(parser_info: &mut ParserInfo) -> ParseResult {
         ));
     }
 
-    let mut struct_body = Node::new_box(&parser_info.current_token_info);
-
-    struct_body
-        .children
-        .push(var_definition_list(parser_info, struct_body.clone())?);
+    let mut body = var_definition_list(parser_info)?;
 
     if !parser_info.match_token(Token::RightBraces) {
         return Err(Error::MissingClosingBrackets(
@@ -39,15 +35,16 @@ pub fn struct_(parser_info: &mut ParserInfo) -> ParseResult {
         ));
     }
 
-    struct_body
+    body
         .children
         .push(Node::new_box(&parser_info.current_token_info));
 
-    node.children.push(struct_body);
+    node.children.push(body);
     Ok(node)
 }
 
-pub fn var_definition_list(parser_info: &mut ParserInfo, mut parent: Box<Node>) -> ParseResult {
+pub fn var_definition_list(parser_info: &mut ParserInfo) -> ParseResult {
+    let mut node = Node::new_box(&parser_info.current_token_info);
     while parser_info.match_token(Token::Identifier) {
         let mut definition = Node::new_box(&parser_info.current_token_info);
 
@@ -73,8 +70,8 @@ pub fn var_definition_list(parser_info: &mut ParserInfo, mut parent: Box<Node>) 
             .children
             .push(Node::new_box(&parser_info.current_token_info));
 
-        parent.children.push(definition)
+        node.children.push(definition)
     }
 
-    Ok(parent)
+    Ok(node)
 }

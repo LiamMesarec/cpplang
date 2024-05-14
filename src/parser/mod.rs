@@ -9,6 +9,7 @@ mod if_;
 mod match_;
 mod range;
 mod struct_;
+mod function;
 
 #[derive(Debug)]
 pub enum Error {
@@ -223,68 +224,6 @@ fn assignment(parser_info: &mut ParserInfo, mut parent: Box<Node>) -> ParseResul
     ))
 }
 
-fn function_definition(parser_info: &mut ParserInfo, mut parent: Box<Node>) -> ParseResult {
-    if parser_info.match_token(Token::Identifier) {
-        parent
-            .children
-            .push(Node::new_box(&parser_info.current_token_info));
-
-        if !parser_info.match_token(Token::LeftParantheses) {
-            return Err(Error::ExpectedStartingParantheses(
-                parser_info.current_token_info.clone(),
-            ));
-        }
-
-        parent
-            .children
-            .push(Node::new_box(&parser_info.current_token_info));
-
-        parent = parameter_list(parser_info, parent)?;
-
-        if !parser_info.match_token(Token::RightParantheses) {
-            return Err(Error::MissingClosingParantheses(
-                parser_info.current_token_info.clone(),
-            ));
-        }
-
-        parent
-            .children
-            .push(Node::new_box(&parser_info.current_token_info));
-
-        if parser_info.match_token(Token::Colon) {
-            parent
-                .children
-                .push(Node::new_box(&parser_info.current_token_info));
-
-            if parser_info.match_token(Token::Identifier) {
-                parent
-                    .children
-                    .push(Node::new_box(&parser_info.current_token_info));
-                if parser_info.match_token(Token::LeftBraces) {
-                    let mut node = Node::new_box(&parser_info.current_token_info);
-                    node.children.push(operator(parser_info)?);
-
-                    if !parser_info.match_token(Token::RightBraces) {
-                        return Err(Error::MissingClosingParantheses(
-                            parser_info.current_token_info.clone(),
-                        ));
-                    }
-
-                    node.children
-                        .push(Node::new_box(&parser_info.current_token_info));
-                    parent.children.push(node);
-
-                    return Ok(parent);
-                }
-            }
-        }
-    }
-
-    Err(Error::InvalidAssignment(
-        parser_info.current_token_info.clone(),
-        parser_info.last_n_token_lexemes(3),
-    ))
-}
 
 fn parameter_list(parser_info: &mut ParserInfo, mut parent: Box<Node>) -> ParseResult {
     while parser_info.match_token(Token::Identifier) {
@@ -330,7 +269,7 @@ fn primary(parser_info: &mut ParserInfo) -> ParseResult {
     if parser_info.match_token(Token::Let) {
         return assignment(parser_info, Node::new_box(&parser_info.current_token_info));
     } else if parser_info.match_token(Token::Fn) {
-        return function_definition(parser_info, Node::new_box(&parser_info.current_token_info));
+        return function::function(parser_info);
     } else if parser_info.match_token(Token::For) {
         return for_::for_(parser_info);
     } else if parser_info.match_token(Token::If) {
