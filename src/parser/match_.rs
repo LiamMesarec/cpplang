@@ -17,7 +17,7 @@ pub fn match_(parser_info: &mut ParserInfo) -> ParseResult {
 
     let mut node_opening_braces = Node::new_box(&parser_info.current_token_info);
 
-    let mut node_arrow = Node::new_box(&parser_info.current_token_info);
+    let _node_arrow = Node::new_box(&parser_info.current_token_info);
 
     while parser_info.match_any_of(&[Token::Number, Token::Identifier]) {
         node_opening_braces

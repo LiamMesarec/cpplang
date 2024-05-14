@@ -3,7 +3,7 @@ use crate::parser::operator;
 use crate::parser::{Error, Node, ParseResult, ParserInfo};
 use crate::tokenizer::Token;
 
-///struct {
+///struct Name {
 ///    name: type
 ///    name: type
 ///    *...*
@@ -11,7 +11,15 @@ use crate::tokenizer::Token;
 pub fn struct_(parser_info: &mut ParserInfo) -> ParseResult {
     let mut node = Node::new_box(&parser_info.current_token_info);
 
-    node.children.push(operator(parser_info)?);
+    if !parser_info.match_token(Token::Identifier) {
+        return Err(Error::Generic(
+            parser_info.current_token_info.clone(),
+            String::from("Expected struct name")
+        ));
+    }
+
+    node.children.push(Node::new_box(&parser_info.current_token_info));
+    println!("{:?}", &parser_info.current_token_info);
 
     if !parser_info.match_token(Token::LeftBraces) {
         return Err(Error::ExpectedStartingBrackets(

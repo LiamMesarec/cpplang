@@ -101,7 +101,7 @@ fn match_() {
     }
 "#
     ));
-assert!(is_parsable(
+    assert!(is_parsable(
         r#"
     match i {
     	i => 1 == 3
@@ -121,5 +121,10 @@ fn struct_() {
     }
 "#
     ));
-
+    assert!(is_parsable(
+        r#"
+    struct Struct {
+    }
+"#
+    ));
 }
