@@ -1,5 +1,3 @@
-
-
 use crate::parser::{Error, Node, ParseResult, ParserInfo};
 use crate::tokenizer::Token;
 
@@ -35,8 +33,7 @@ pub fn struct_(parser_info: &mut ParserInfo) -> ParseResult {
         ));
     }
 
-    body
-        .children
+    body.children
         .push(Node::new_box(&parser_info.current_token_info));
 
     node.children.push(body);

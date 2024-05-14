@@ -5,11 +5,11 @@ use std::io::Write;
 
 mod body;
 mod for_;
+mod function;
 mod if_;
 mod match_;
 mod range;
 mod struct_;
-mod function;
 
 #[derive(Debug)]
 pub enum Error {
@@ -223,7 +223,6 @@ fn assignment(parser_info: &mut ParserInfo, mut parent: Box<Node>) -> ParseResul
         parser_info.last_n_token_lexemes(3),
     ))
 }
-
 
 fn parameter_list(parser_info: &mut ParserInfo, mut parent: Box<Node>) -> ParseResult {
     while parser_info.match_token(Token::Identifier) {

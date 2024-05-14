@@ -1,12 +1,11 @@
+use crate::parser::operator;
 use crate::parser::{Error, Node, ParseResult, ParserInfo};
 use crate::tokenizer::Token;
-use crate::parser::operator;
 
 pub fn function(parser_info: &mut ParserInfo) -> ParseResult {
-    let mut node =  Node::new_box(&parser_info.current_token_info);
+    let mut node = Node::new_box(&parser_info.current_token_info);
     if parser_info.match_token(Token::Identifier) {
-        node
-            .children
+        node.children
             .push(Node::new_box(&parser_info.current_token_info));
 
         if !parser_info.match_token(Token::LeftParantheses) {
@@ -15,7 +14,7 @@ pub fn function(parser_info: &mut ParserInfo) -> ParseResult {
             ));
         }
 
-        let mut parameters = parameter_list(parser_info)?;
+        let parameters = parameter_list(parser_info)?;
 
         node.children.push(parameters);
 
@@ -25,18 +24,15 @@ pub fn function(parser_info: &mut ParserInfo) -> ParseResult {
             ));
         }
 
-        node
-            .children
+        node.children
             .push(Node::new_box(&parser_info.current_token_info));
 
         if parser_info.match_token(Token::Colon) {
-            node
-                .children
+            node.children
                 .push(Node::new_box(&parser_info.current_token_info));
 
             if parser_info.match_token(Token::Identifier) {
-                node
-                    .children
+                node.children
                     .push(Node::new_box(&parser_info.current_token_info));
                 if parser_info.match_token(Token::LeftBraces) {
                     let mut body = Node::new_box(&parser_info.current_token_info);
@@ -68,8 +64,7 @@ pub fn parameter_list(parser_info: &mut ParserInfo) -> ParseResult {
     let mut node = Node::new_box(&parser_info.current_token_info);
 
     while parser_info.match_token(Token::Identifier) {
-        node
-            .children
+        node.children
             .push(Node::new_box(&parser_info.current_token_info));
 
         if !parser_info.match_token(Token::Colon) {
@@ -79,8 +74,7 @@ pub fn parameter_list(parser_info: &mut ParserInfo) -> ParseResult {
             ));
         }
 
-        node
-            .children
+        node.children
             .push(Node::new_box(&parser_info.current_token_info));
 
         if !parser_info.match_token(Token::Identifier) {
@@ -90,16 +84,14 @@ pub fn parameter_list(parser_info: &mut ParserInfo) -> ParseResult {
             ));
         }
 
-        node
-            .children
+        node.children
             .push(Node::new_box(&parser_info.current_token_info));
 
         if !parser_info.match_token(Token::Comma) {
             break;
         }
 
-        node
-            .children
+        node.children
             .push(Node::new_box(&parser_info.current_token_info));
     }
 
