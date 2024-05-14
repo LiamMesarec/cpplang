@@ -1,7 +1,7 @@
 use crate::parser::operator;
 use crate::parser::{Error, Node, ParseResult, ParserInfo};
 use crate::tokenizer::Token;
-
+use crate::parser::body;
 pub fn function(parser_info: &mut ParserInfo) -> ParseResult {
     let mut node = Node::new_box(&parser_info.current_token_info);
     if parser_info.match_token(Token::Identifier) {
@@ -34,22 +34,9 @@ pub fn function(parser_info: &mut ParserInfo) -> ParseResult {
             if parser_info.match_token(Token::Identifier) {
                 node.children
                     .push(Node::new_box(&parser_info.current_token_info));
-                if parser_info.match_token(Token::LeftBraces) {
-                    let mut body = Node::new_box(&parser_info.current_token_info);
-                    body.children.push(operator(parser_info)?);
 
-                    if !parser_info.match_token(Token::RightBraces) {
-                        return Err(Error::MissingClosingParantheses(
-                            parser_info.current_token_info.clone(),
-                        ));
-                    }
-
-                    body.children
-                        .push(Node::new_box(&parser_info.current_token_info));
-                    node.children.push(body);
-
-                    return Ok(node);
-                }
+                node.children.push(body::body(parser_info)?);
+                return Ok(node);
             }
         }
     }
