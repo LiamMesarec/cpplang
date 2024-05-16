@@ -29,12 +29,12 @@ impl std::fmt::Display for Error {
     }
 }
 
-// TODO if there is too many tokens the tokenizer stops working and shows next_token as EOF
 #[derive(Debug, Copy, Clone, PartialEq, Default)]
 pub enum Token {
     #[default]
     None = 0,
 
+    EOF, //don't move EOF
     Identifier,
     Colon,
     Comma,
@@ -76,7 +76,6 @@ pub enum Token {
     Ignore,
     EOT,
 
-    EOF,
     Error,
 }
 
