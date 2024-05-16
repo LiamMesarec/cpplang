@@ -5,6 +5,7 @@ pub enum Error {
     NotAKeyword(String),
     InvalidPattern(String, Position),
     InvalidStream,
+    UnclosedString(Position),
 }
 
 impl std::error::Error for Error {}
@@ -19,6 +20,11 @@ impl std::fmt::Display for Error {
                 lexeme, position.row
             ),
             Error::InvalidStream => write!(f, "Tokenizer error: invalid stream. Cannot read"),
+            Error::UnclosedString(position) => write!(
+                f,
+                "Tokenizer error: Unclosed string on line {}",
+                position.row
+            ),
         }
     }
 }
@@ -35,6 +41,7 @@ pub enum Token {
     Number,
     Star,
     Modulo,
+    String,
 
     Let,
     Mut,
@@ -50,7 +57,6 @@ pub enum Token {
     Addition,
     Subtraction,
     Int,
-    Hex,
     LeftParantheses,
     RightParantheses,
     LeftBraces,
@@ -164,6 +170,22 @@ fn get_token<R: BufRead>(mut tokens_reader: R, dfa: &mut DFA) -> Result<TokenInf
         }
     }
 
+    /*if code == '\"' {
+        while code != '\"' {
+            if tokens_reader.read(&mut buffer).unwrap() > 0 {
+                code = buffer[0] as char;
+                dfa.position = next_position(dfa.position, code);
+            } else {
+                token_info.token = Token::EOF;
+                return Ok(token_info);
+            }
+        }
+
+        token_info.lexeme.push(code);
+        dfa.position = next_position(dfa.position, code);
+        token_info.lexeme.push(code);
+    }*/
+
     loop {
         let next_state = transitions_table[state as usize][code as usize];
         if next_state == Token::EOT || next_state == Token::EOF {
@@ -179,6 +201,22 @@ fn get_token<R: BufRead>(mut tokens_reader: R, dfa: &mut DFA) -> Result<TokenInf
         }
 
         if next_state == Token::None {
+            if state == Token::String {
+                token_info.lexeme.push(code);
+                token_info.token = state;
+                if tokens_reader.read(&mut buffer).unwrap() > 0 {
+                    code = buffer[0] as char;
+                    dfa.last = code;
+                    dfa.position = next_position(dfa.position, code);
+                } else {
+                    if !token_info.lexeme.is_empty() {
+                        dfa.last = char::default();
+                        break;
+                    }
+                    token_info.token = Token::EOF;
+                    return Ok(token_info);
+                }
+            }
             break;
         }
 
@@ -201,6 +239,11 @@ fn get_token<R: BufRead>(mut tokens_reader: R, dfa: &mut DFA) -> Result<TokenInf
 
     token_info.token = state;
     token_info.token = assign_if_reserved_identifier(&token_info);
+
+    if token_info.token == Token::String && token_info.lexeme.chars().last().unwrap() != '\"' {
+        return Err(Error::UnclosedString(token_info.start_position));
+    }
+
     Ok(token_info)
 }
 
@@ -258,6 +301,19 @@ fn create_transitions_table(alphabet_len: usize, num_states: usize) -> Vec<Vec<T
 
     set_transition(Token::None, ':', Token::Colon);
     set_transition(Token::Assignment, '=', Token::Equals);
+
+    set_transition(Token::None, '\"', Token::String);
+    //set_transition(Token::String::string_start, '\"', Token::String::string_end);
+
+    //TODO add to stop on " and not on \"
+    for i in 0..=255 {
+        let c = char::from_u32(i as u32).unwrap();
+        if c != '\"' {
+            set_transition(Token::String, c, Token::String)
+        } else {
+            set_transition(Token::String, c, Token::None)
+        }
+    }
 
     for i in '0'..='9' {
         set_transition(Token::None, i, Token::Number);

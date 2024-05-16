@@ -72,6 +72,73 @@ fn typenames() {
 }
 
 #[test]
+fn strings() {
+    assert!(tokenize_and_compare(
+        "\"str\"\n\"tt\"",
+        &[
+            TokenInfo {
+                token: Token::String,
+                lexeme: String::from("\"str\""),
+                start_position: Position { row: 1, col: 1 }
+            },
+          TokenInfo {
+                token: Token::String,
+                lexeme: String::from("\"tt\""),
+                start_position: Position { row: 2, col: 1 }
+            },
+          
+            TokenInfo {
+                token: Token::EOF,
+                lexeme: String::from(""),
+                start_position: Position { row: 2, col: 5}
+            }
+        ]
+    ));
+    assert!(tokenize_and_compare(
+        "\"str\"\nnum",
+        &[
+            TokenInfo {
+                token: Token::String,
+                lexeme: String::from("\"str\""),
+                start_position: Position { row: 1, col: 1 }
+            },
+            TokenInfo {
+                token: Token::Identifier,
+                lexeme: String::from("num"),
+                start_position: Position { row: 2, col: 1 }
+            },
+
+            TokenInfo {
+                token: Token::EOF,
+                lexeme: String::from(""),
+                start_position: Position { row: 2, col: 4}
+            }
+        ]
+    ));
+    assert!(!tokenize_and_compare(
+        "\"err\nnum",
+        &[
+            TokenInfo {
+                token: Token::String,
+                lexeme: String::from("\"err\""),
+                start_position: Position { row: 1, col: 1 }
+            },
+            TokenInfo {
+                token: Token::Identifier,
+                lexeme: String::from("num"),
+                start_position: Position { row: 2, col: 1 }
+            },
+
+            TokenInfo {
+                token: Token::EOF,
+                lexeme: String::from(""),
+                start_position: Position { row: 2, col: 4}
+            }
+        ]
+    ));
+}
+
+#[test]
 fn operators() {
     assert!(tokenize_and_compare(
         "==\n= *",
