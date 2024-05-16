@@ -1,4 +1,3 @@
-use crate::parser::operator;
 use crate::parser::{Error, Node, ParseResult, ParserInfo};
 use crate::tokenizer::Token;
 use crate::parser::body;
