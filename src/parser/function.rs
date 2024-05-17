@@ -4,7 +4,8 @@ use crate::tokenizer::Token;
 pub fn function(parser_info: &mut ParserInfo) -> ParseResult {
     let mut node = Node::new_box(&parser_info.current_token_info); //fn
     if parser_info.match_token(Token::Identifier) {
-        let mut node_func = Node::new_box(&parser_info.current_token_info);
+        node.children
+            .push(Node::new_box(&parser_info.current_token_info));
         //fn-main
 
         if !parser_info.match_token(Token::LeftParantheses) {
@@ -15,7 +16,7 @@ pub fn function(parser_info: &mut ParserInfo) -> ParseResult {
 
         let parameters = parameter_list(parser_info)?;
 
-        node_func.children.push(parameters);
+        node.children.push(parameters);
 
         if !parser_info.match_token(Token::RightParantheses) {
             return Err(Error::MissingClosingParantheses(
@@ -23,8 +24,7 @@ pub fn function(parser_info: &mut ParserInfo) -> ParseResult {
             ));
         }
 
-        node_func
-            .children
+        node.children
             .push(Node::new_box(&parser_info.current_token_info));
 
         if parser_info.match_token(Token::Colon) {
@@ -36,14 +36,12 @@ pub fn function(parser_info: &mut ParserInfo) -> ParseResult {
                 node_return_type.children.push(body::body(parser_info)?);
 
                 node_colon.children.push(node_return_type);
-                node_func.children.push(node_colon);
-                node.children.push(node_func);
+                node.children.push(node_colon);
 
                 return Ok(node);
             }
         } else {
-            node_func.children.push(body::body(parser_info)?);
-            node.children.push(node_func);
+            node.children.push(body::body(parser_info)?);
         }
     }
 

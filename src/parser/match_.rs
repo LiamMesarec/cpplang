@@ -7,7 +7,7 @@ use crate::tokenizer::Token;
 pub fn match_(parser_info: &mut ParserInfo) -> ParseResult {
     let mut node = Node::new_box(&parser_info.current_token_info);
 
-    let mut node_identifier = operator(parser_info)?;
+    node.children.push(operator(parser_info)?);
 
     if !parser_info.match_token(Token::LeftBraces) {
         return Err(Error::ExpectedStartingBrackets(
@@ -46,9 +46,7 @@ pub fn match_(parser_info: &mut ParserInfo) -> ParseResult {
         .children
         .push(Node::new_box(&parser_info.current_token_info));
 
-    node_identifier.children.push(node_opening_braces);
-
-    node.children.push(node_identifier);
+    node.children.push(node_opening_braces);
 
     Ok(node)
 }
