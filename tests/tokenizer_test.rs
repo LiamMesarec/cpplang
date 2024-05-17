@@ -81,16 +81,15 @@ fn strings() {
                 lexeme: String::from("\"str\""),
                 start_position: Position { row: 1, col: 1 }
             },
-          TokenInfo {
+            TokenInfo {
                 token: Token::String,
                 lexeme: String::from("\"tt\""),
                 start_position: Position { row: 2, col: 1 }
             },
-          
             TokenInfo {
                 token: Token::EOF,
                 lexeme: String::from(""),
-                start_position: Position { row: 2, col: 5}
+                start_position: Position { row: 2, col: 5 }
             }
         ]
     ));
@@ -107,11 +106,10 @@ fn strings() {
                 lexeme: String::from("num"),
                 start_position: Position { row: 2, col: 1 }
             },
-
             TokenInfo {
                 token: Token::EOF,
                 lexeme: String::from(""),
-                start_position: Position { row: 2, col: 4}
+                start_position: Position { row: 2, col: 4 }
             }
         ]
     ));
@@ -128,11 +126,10 @@ fn strings() {
                 lexeme: String::from("num"),
                 start_position: Position { row: 2, col: 1 }
             },
-
             TokenInfo {
                 token: Token::EOF,
                 lexeme: String::from(""),
-                start_position: Position { row: 2, col: 4}
+                start_position: Position { row: 2, col: 4 }
             }
         ]
     ));

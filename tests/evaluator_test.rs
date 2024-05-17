@@ -34,11 +34,8 @@ fn evaluate_and_compare(input: &str, expected_output: &str) -> bool {
 
 #[test]
 fn assignment() {
-
     assert!(evaluate_and_compare(
         r#"fn main(): u32 { 0 }"#,
         "int32_t main() { 0 }"
     ));
 }
-
-

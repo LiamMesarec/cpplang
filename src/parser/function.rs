@@ -74,7 +74,7 @@ pub fn parameter_list(parser_info: &mut ParserInfo) -> ParseResult {
             ));
         }
 
-        let mut node_type = Node::new_box(&parser_info.current_token_info);
+        let node_type = Node::new_box(&parser_info.current_token_info);
 
         if !parser_info.match_token(Token::Comma) {
             node_colon.children.push(node_type);
