@@ -1,6 +1,6 @@
 use crate::parser::Node;
 use crate::tokenizer::{Token, TokenInfo};
-
+//TODO make function for creating linked list than evaluate linked list to c++
 #[derive(Debug)]
 pub enum Error {
     Generic(TokenInfo, String),

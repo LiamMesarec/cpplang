@@ -33,10 +33,12 @@ fn evaluate_and_compare(input: &str, expected_output: &str) -> bool {
 }
 
 #[test]
-#[ignore]
 fn assignment() {
+
     assert!(evaluate_and_compare(
-        r#"let i: u32 = u"#,
-        "const uint_32t i = u;"
+        r#"fn main(): u32 { 0 }"#,
+        "int32_t main() { 0 }"
     ));
 }
+
+

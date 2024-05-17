@@ -2,7 +2,7 @@
 
 ## Setup
 
-Run git 'config --local core.hooksPath .githooks/' after cloning.
+Run 'git config --local core.hooksPath .githooks/' after cloning.
 
 ## Features
 
