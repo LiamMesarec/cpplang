@@ -25,7 +25,7 @@ pub fn struct_(parser_info: &mut ParserInfo) -> ParseResult {
         ));
     }
 
-    let mut body = var_definition_list(parser_info)?;
+    let body = var_definition_list(parser_info)?;
 
     if !parser_info.match_token(Token::RightBraces) {
         return Err(Error::MissingClosingBrackets(
