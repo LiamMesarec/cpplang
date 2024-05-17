@@ -182,9 +182,9 @@ pub fn parse(tokens: &[TokenInfo]) -> ParseResult {
 pub fn operator(parser_info: &mut ParserInfo) -> ParseResult {
     let mut node = primary(parser_info)?;
     while parser_info.match_token(Token::Equals) {
-        node.children
-            .push(Node::new_box(&parser_info.current_token_info));
-        node.children.push(primary(parser_info)?);
+        let mut node_operator = Node::new_box(&parser_info.current_token_info);
+        node_operator.children.push(primary(parser_info)?);
+        node.children.push(node_operator);
     }
 
     Ok(node)
