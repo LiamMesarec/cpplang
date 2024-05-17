@@ -33,9 +33,6 @@ pub fn struct_(parser_info: &mut ParserInfo) -> ParseResult {
         ));
     }
 
-    body.children
-        .push(Node::new_box(&parser_info.current_token_info));
-
     node.children.push(body);
     Ok(node)
 }
