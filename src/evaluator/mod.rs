@@ -1,5 +1,6 @@
 use crate::parser::Node;
 use crate::tokenizer::{Token, TokenInfo};
+use std::collections::LinkedList;
 //TODO make function for creating linked list than evaluate linked list to c++
 #[derive(Debug)]
 pub enum Error {
@@ -44,9 +45,42 @@ fn evaluate_recursive(node: &Node) -> String {
 fn evaluate_node(node: &Node) -> String {
     match node.token_info.token {
         Token::Let => let_definition(&node),
+        Token::Fn => function_definition(&node),
         Token::Equals | Token::Identifier | Token::Number => operator(&node),
         _ => String::new(),
     }
+}
+
+fn function_definition(node: &Node) -> String {
+    let mut it = node.children.iter();
+
+    let mut out: String = String::from("");
+
+    if let Some(it_name) = it.next() {
+        let mut parameter_list: String = String::from("");
+
+        it.next();
+        parameter_list.push_str("(");
+        // while it.next is Identifier -> var_definition()
+        parameter_list.push_str(")");
+
+        if let Some(it_colon) = it.next() {
+            let colon = &(*it_colon).token_info.token;
+            if *colon == Token::Colon {
+                out.push_str(&(*it_colon).children[0].token_info.lexeme);
+                // match our type to c++ type
+                out.push_str(&(*it_name).token_info.lexeme);
+                out.push_str(&parameter_list);
+            } else {
+                out.push_str(&(*it_name).token_info.lexeme);
+                out.push_str(&parameter_list);
+                out.push_str(&(*it_colon).token_info.lexeme);
+            }
+        }
+    }
+
+    println!("{}", out);
+    out
 }
 
 fn let_definition(node: &Node) -> String {

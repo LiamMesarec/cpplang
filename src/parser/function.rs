@@ -24,19 +24,17 @@ pub fn function(parser_info: &mut ParserInfo) -> ParseResult {
             ));
         }
 
-        node.children
-            .push(Node::new_box(&parser_info.current_token_info));
-
         if parser_info.match_token(Token::Colon) {
             let mut node_colon = Node::new_box(&parser_info.current_token_info);
 
             if parser_info.match_token(Token::Identifier) {
-                let mut node_return_type = Node::new_box(&parser_info.current_token_info);
+                node_colon
+                    .children
+                    .push(Node::new_box(&parser_info.current_token_info));
 
-                node_return_type.children.push(body::body(parser_info)?);
-
-                node_colon.children.push(node_return_type);
                 node.children.push(node_colon);
+
+                node.children.push(body::body(parser_info)?);
 
                 return Ok(node);
             }
