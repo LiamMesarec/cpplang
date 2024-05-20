@@ -39,5 +39,8 @@ fn assignment() {}
 #[test]
 #[ignore]
 fn function() {
-    assert!(evaluate_and_compare(r#"fn main(): u32 { 0 }"#, "uint32_t main() { 0 }"));
+    assert!(evaluate_and_compare(
+        r#"fn main(): u32 { 0 }"#,
+        "uint32_t main() { 0 }"
+    ));
 }
