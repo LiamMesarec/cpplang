@@ -1,5 +1,6 @@
 use clap::{Parser, Subcommand};
 use std::fs;
+use std::path::PathBuf;
 
 #[derive(Subcommand, Clone, Debug)]
 pub enum Command {
@@ -18,6 +19,12 @@ impl Command {
         fs::create_dir(&cpp_path).unwrap();
         fs::File::create(format!("{}/CMakeLists.txt", &cpp_path)).unwrap();
         fs::File::create(format!("{}/main.cpp2", &src_path)).unwrap();
+
+        let src = std::path::Path::new("types.csv");
+        let mut dst = PathBuf::new();
+        dst.push(name);
+        dst.push("types.csv");
+        fs::copy(&src, &dst).unwrap();
     }
 
     fn execute(&self) {

@@ -1,0 +1,11 @@
+cpplang;cpp;include
+u8;uint8_t;cstdint
+u16;uint16_t;cstdint
+u32;uint32_t;cstdint
+u64;uint64_t;cstdint
+i8;int8_t;cstdint
+i16;int16_t;cstdint
+i32;int32_t;cstdint
+i64;int64_t;cstdint
+f32;double;
+f64;float;

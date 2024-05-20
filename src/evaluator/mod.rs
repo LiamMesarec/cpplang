@@ -1,10 +1,13 @@
 use crate::parser::Node;
 use crate::tokenizer::{Token, TokenInfo};
-use std::collections::LinkedList;
-//TODO make function for creating linked list than evaluate linked list to c++
+use std::collections::{LinkedList, HashMap};
+
+mod to_cpp;
+
 #[derive(Debug)]
 pub enum Error {
     Generic(TokenInfo, String),
+    Csv(String)
 }
 
 impl std::error::Error for Error {}
@@ -17,17 +20,29 @@ impl std::fmt::Display for Error {
                 "Syntax error: unexpected token '{}' after {} on line {}",
                 token_info.lexeme, string, token_info.start_position.row
             ),
+            Error::Csv(file_path) => write!(
+                f,
+                "Cannot open file {} for reading CSV", file_path
+            ),
         }
     }
 }
 
 struct EvaluatorInfo {
     ast: Box<Node>,
+    types: HashMap<String, to_cpp::TypeInfo>
 }
 
 pub fn evaluate(ast: Box<Node>) -> Result<String, Error> {
-    let evaluator_info = EvaluatorInfo { ast };
-    Ok(evaluate_recursive(&evaluator_info.ast))
+    match to_cpp::init_types() {
+        Ok(types) => {
+            let evaluator_info = EvaluatorInfo { ast, types };
+            //Ok(evaluate_recursive(&evaluator_info.ast))
+        }
+        Err(error) => { println!("here: {:?}", error); }
+    }
+
+    Ok("".to_string())
 }
 
 fn evaluate_recursive(node: &Node) -> String {
