@@ -27,6 +27,73 @@ fn tokenize_and_compare(input: &str, expected_output: &[TokenInfo]) -> bool {
 }
 
 #[test]
+fn bitwise() {
+    assert!(tokenize_and_compare(
+        "&\n|\n^\n~\n<<\n>>",
+        &[
+            TokenInfo {
+                token: Token::BwAnd,
+                lexeme: String::from("&"),
+                start_position: Position { row: 1, col: 1 }
+            },
+            TokenInfo {
+                token: Token::BwOr,
+                lexeme: String::from("|"),
+                start_position: Position { row: 2, col: 1 }
+            },
+            TokenInfo {
+                token: Token::BwXor,
+                lexeme: String::from("^"),
+                start_position: Position { row: 3, col: 1 }
+            },
+            TokenInfo {
+                token: Token::BwNot,
+                lexeme: String::from("~"),
+                start_position: Position { row: 4, col: 1 }
+            },
+            TokenInfo {
+                token: Token::BwShl,
+                lexeme: String::from("<<"),
+                start_position: Position { row: 5, col: 1 }
+            },
+            TokenInfo {
+                token: Token::BwShr,
+                lexeme: String::from(">>"),
+                start_position: Position { row: 6, col: 1 }
+            },
+            TokenInfo {
+                token: Token::EOF,
+                lexeme: String::from(""),
+                start_position: Position { row: 6, col: 3 }
+            }
+        ]
+    ));
+}
+#[test]
+fn logic_operators() {
+    assert!(tokenize_and_compare(
+        "&&\n||",
+        &[
+            TokenInfo {
+                token: Token::And,
+                lexeme: String::from("&&"),
+                start_position: Position { row: 1, col: 1 }
+            },
+            TokenInfo {
+                token: Token::Or,
+                lexeme: String::from("||"),
+                start_position: Position { row: 2, col: 1 }
+            },
+            TokenInfo {
+                token: Token::EOF,
+                lexeme: String::from(""),
+                start_position: Position { row: 2, col: 3 }
+            }
+        ]
+    ));
+}
+
+#[test]
 fn typenames() {
     assert!(tokenize_and_compare(
         "u16",

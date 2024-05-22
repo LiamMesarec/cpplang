@@ -31,6 +31,10 @@ fn assignment() {
 let i: u32 = u
 let a: UserDefined = 11+(22*2)"#
     ));
+    assert!(is_parsable(
+        r#"
+let i = 10"#
+    ));
 }
 
 #[test]

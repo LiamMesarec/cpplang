@@ -8,7 +8,7 @@ mod to_cpp;
 pub enum Error {
     Generic(TokenInfo, String),
     Csv(String),
-    MissingFunctionBody()
+    MissingFunctionBody(),
 }
 
 impl std::error::Error for Error {}
@@ -141,11 +141,11 @@ fn operator(node: &Node, evaluator_info: &EvaluatorInfo) -> Result<String, Error
     let mut output = node.token_info.lexeme.clone();
     output.push_str(
         &node
-        .children
-        .iter()
-        .map(|child| evaluate_node(&child, &evaluator_info))
-        .collect::<Result<Vec<String>, Error>>()?
-        .join(""),
+            .children
+            .iter()
+            .map(|child| evaluate_node(&child, &evaluator_info))
+            .collect::<Result<Vec<String>, Error>>()?
+            .join(""),
     );
     Ok(output)
 }

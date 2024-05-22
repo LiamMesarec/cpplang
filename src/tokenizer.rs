@@ -52,6 +52,15 @@ pub enum Token {
     Struct,
     Arrow,
 
+    BwAnd,
+    BwOr,
+    BwXor,
+    BwNot,
+    BwShl,
+    BwShr,
+    And,
+    Or,
+
     Multiplication,
     Division,
     Addition,
@@ -65,6 +74,7 @@ pub enum Token {
     GreaterThan,
     LowerThan,
     Equals,
+    Inequal,
     Semicolon,
     If,
     Else,
@@ -300,6 +310,20 @@ fn create_transitions_table(alphabet_len: usize, num_states: usize) -> Vec<Vec<T
 
     set_transition(Token::None, ':', Token::Colon);
     set_transition(Token::Assignment, '=', Token::Equals);
+
+    set_transition(Token::None, '<', Token::LowerThan);
+    set_transition(Token::None, '>', Token::GreaterThan);
+
+    set_transition(Token::LowerThan, '<', Token::BwShl);
+    set_transition(Token::GreaterThan, '>', Token::BwShr);
+
+    set_transition(Token::None, '&', Token::BwAnd);
+    set_transition(Token::None, '|', Token::BwOr);
+    set_transition(Token::None, '^', Token::BwXor);
+    set_transition(Token::None, '~', Token::BwNot);
+
+    set_transition(Token::BwAnd, '&', Token::And);
+    set_transition(Token::BwOr, '|', Token::Or);
 
     set_transition(Token::None, '\"', Token::String);
     //set_transition(Token::String::string_start, '\"', Token::String::string_end);

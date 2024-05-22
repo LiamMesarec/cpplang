@@ -192,27 +192,33 @@ pub fn operator(parser_info: &mut ParserInfo) -> ParseResult {
 
 fn assignment(parser_info: &mut ParserInfo, mut parent: Box<Node>) -> ParseResult {
     if parser_info.match_token(Token::Identifier) {
-        parent
-            .children
-            .push(Node::new_box(&parser_info.current_token_info));
+        let mut node_identifier = Node::new_box(&parser_info.current_token_info);
 
         if parser_info.match_token(Token::Colon) {
-            parent
-                .children
-                .push(Node::new_box(&parser_info.current_token_info));
+            let mut node_colon = Node::new_box(&parser_info.current_token_info);
 
             if parser_info.match_token(Token::Identifier) {
-                parent
+                node_colon
                     .children
                     .push(Node::new_box(&parser_info.current_token_info));
             }
+            node_identifier.children.push(node_colon);
+
+            parent.children.push(node_identifier);
 
             if parser_info.match_token(Token::Assignment) {
-                parent
-                    .children
-                    .push(Node::new_box(&parser_info.current_token_info));
-                parent.children.push(operator(parser_info)?);
+                let mut node_assigment = Node::new_box(&parser_info.current_token_info);
+                node_assigment.children.push(operator(parser_info)?);
+                parent.children.push(node_assigment);
+                return Ok(parent);
+            }
+        } else {
+            parent.children.push(node_identifier);
 
+            if parser_info.match_token(Token::Assignment) {
+                let mut node_assigment = Node::new_box(&parser_info.current_token_info);
+                node_assigment.children.push(operator(parser_info)?);
+                parent.children.push(node_assigment);
                 return Ok(parent);
             }
         }
