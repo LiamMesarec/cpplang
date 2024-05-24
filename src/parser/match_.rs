@@ -1,4 +1,4 @@
-use crate::parser::operator;
+use crate::parser::bitwise;
 
 use crate::parser::{Error, Node, ParseResult, ParserInfo};
 use crate::tokenizer::Token;
@@ -7,7 +7,7 @@ use crate::tokenizer::Token;
 pub fn match_(parser_info: &mut ParserInfo) -> ParseResult {
     let mut node = Node::new_box(&parser_info.current_token_info);
 
-    node.children.push(operator(parser_info)?);
+    node.children.push(bitwise(parser_info)?);
 
     if !parser_info.match_token(Token::LeftBraces) {
         return Err(Error::ExpectedStartingBrackets(
@@ -29,7 +29,7 @@ pub fn match_(parser_info: &mut ParserInfo) -> ParseResult {
 
         let mut node_arrow = Node::new_box(&parser_info.current_token_info);
 
-        node_arrow.children.push(operator(parser_info)?);
+        node_arrow.children.push(bitwise(parser_info)?);
 
         node_match.children.push(node_arrow);
 

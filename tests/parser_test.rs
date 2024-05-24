@@ -24,12 +24,11 @@ fn is_parsable(input: &str) -> bool {
 }
 
 #[test]
-#[ignore]
 fn assignment() {
     assert!(is_parsable(
         r#"
 let i: u32 = u
-let a: UserDefined = 11+(22*2)"#
+let a: UserDefined = 11+(22 + -10 / (10 * (50))*2)"#
     ));
     assert!(is_parsable(
         r#"

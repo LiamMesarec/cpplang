@@ -1,5 +1,5 @@
+use crate::parser::bitwise;
 use crate::parser::body;
-use crate::parser::operator;
 
 use crate::parser::{Node, ParseResult, ParserInfo};
 use crate::tokenizer::Token;
@@ -8,7 +8,7 @@ use crate::tokenizer::Token;
 pub fn if_(parser_info: &mut ParserInfo) -> ParseResult {
     let mut node = Node::new_box(&parser_info.current_token_info);
 
-    node.children.push(operator(parser_info)?);
+    node.children.push(bitwise(parser_info)?);
 
     node.children.push(body::body(parser_info)?);
 
