@@ -31,8 +31,8 @@ jobs:
       - name: List target directory contents
         run: dir target\release
 
-      - name: Upload artifact (compiled program)
+      - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: compiled-program
-          path: target/release/*.exe
+          path: target/release/rust.exe
