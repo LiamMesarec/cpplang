@@ -1,0 +1,35 @@
+name: Release Linux
+
+on:
+  push:
+    branches:
+      - release-linux
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Run tests
+        run: cargo test
+
+      - name: Fix code
+        run: cargo fix --allow-dirty
+
+      - name: Build the project
+        run: cargo build --release
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: compiled-program
+          path: target/release/cpplang
