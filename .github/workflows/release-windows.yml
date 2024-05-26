@@ -28,9 +28,12 @@ jobs:
       - name: Build the project
         run: cargo build --release
 
+      - name: List target directory contents
+        run: dir target\release
+
       - name: Upload artifact (compiled program)
         uses: actions/upload-artifact@v3
         with:
           name: compiled-program
-          path: target/release/cpplang.exe
+          path: target/release/*.exe
 
