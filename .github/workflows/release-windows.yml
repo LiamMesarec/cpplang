@@ -3,7 +3,7 @@ name: Release Windows
 on:
   push:
     branches:
-      - release-windows
+      - release-linux
 
 jobs:
   build:
