@@ -1,9 +1,9 @@
- name: Release Windows
+name: Release Windows
 
 on:
   push:
     branches:
-      - release-linux
+      - release-windows
 
 jobs:
   build:
@@ -36,4 +36,3 @@ jobs:
         with:
           name: compiled-program
           path: target/release/*.exe
-
