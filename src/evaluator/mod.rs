@@ -1,6 +1,6 @@
-use crate::parser::Node;
+/*use crate::parser::Node;
 use crate::tokenizer::{Token, TokenInfo};
-use std::collections::{HashMap, LinkedList};
+use std::collections::HashMap;
 
 mod to_cpp;
 
@@ -9,6 +9,11 @@ pub enum Error {
     Generic(TokenInfo, String),
     Csv(String),
     MissingFunctionBody(),
+    MissingExpression(),
+    MissingAssignment(),
+    MissingName(),
+    MissingType(),
+    ExpectedTypeSpecifier(),
 }
 
 impl std::error::Error for Error {}
@@ -23,6 +28,11 @@ impl std::fmt::Display for Error {
             ),
             Error::Csv(file_path) => write!(f, "CSV error: {}", file_path),
             Error::MissingFunctionBody() => write!(f, "Evaluator error: Missing function body"),
+            Error::MissingName() => write!(f, "Evaluator error: Missing name"),
+            Error::MissingType() => write!(f, "Evaluator error: Missing type"),
+            Error::MissingAssignment() => write!(f, "Evaluator error: Missing assigment"),
+            Error::MissingExpression() => write!(f, "Evaluator error: Missing expression"),
+            Error::ExpectedTypeSpecifier() => write!(f, "Evaluator error: Expected type specifier"),
         }
     }
 }
@@ -65,7 +75,7 @@ fn evaluate_node(node: &Node, evaluator_info: &EvaluatorInfo) -> Result<String, 
         Token::Let => let_definition(&node, &evaluator_info),
         Token::Fn => function_definition(&node, &evaluator_info),
         Token::Equals | Token::Identifier | Token::Number => operator(&node, &evaluator_info),
-        _ => Ok(String::new()), // Changed to return Ok()
+        _ => Ok(String::new()),
     }
 }
 
@@ -109,30 +119,29 @@ fn function_definition(node: &Node, evaluator_info: &EvaluatorInfo) -> Result<St
     Ok(out)
 }
 
+fn type_specifier(node: &Node, evaluator_info: &EvaluatorInfo) -> Result<String, Error> {
+    let mut it = node.children.iter();
+    println!("{:?}", it);
+    let it_type = it_or_err(it.next(), Error::MissingType())?;
+
+    Ok((*it_type).token_info.lexeme.clone())
+}
+
 fn let_definition(node: &Node, evaluator_info: &EvaluatorInfo) -> Result<String, Error> {
     let mut output = String::new();
 
     let mut it = node.children.iter();
-    if let Some(it_name) = it.next() {
-        let name = &(*it_name).token_info.lexeme;
+    let it_name = it_or_err(it.next(), Error::MissingName())?;
+    let name = &(*it_name).token_info.lexeme;
+    let _type = type_specifier(&node.children[0].children[0], &evaluator_info)?;
+    let it_assignment_operator = it_or_err(it.next(), Error::MissingAssignment())?;
+    let assignment_operator = &(*it_assignment_operator).token_info.lexeme;
+    // let rhs = operator(&node, &evaluator_info)?;
 
-        if let Some(_) = it.next() {
-            if let Some(it_type) = it.next() {
-                let _type = &(*it_type).token_info.lexeme;
-                if let Some(it_assignment_operator) = it.next() {
-                    let assignment_operator = &(*it_assignment_operator).token_info.lexeme;
-                    if let Some(it_right_side) = it.next() {
-                        let right_side = evaluate_node(&(*it_right_side), &evaluator_info)?;
-
-                        output.push_str(&format!(
-                            "const {} {} {} {};",
-                            _type, name, assignment_operator, right_side
-                        ));
-                    }
-                }
-            }
-        }
-    }
+    output.push_str(&format!(
+        "const {} {} {};",
+        _type, name, assignment_operator
+    ));
 
     Ok(output)
 }
@@ -148,4 +157,4 @@ fn operator(node: &Node, evaluator_info: &EvaluatorInfo) -> Result<String, Error
             .join(""),
     );
     Ok(output)
-}
+}*/

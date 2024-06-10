@@ -1,4 +1,4 @@
-use rust::evaluator;
+/*use rust::evaluator;
 use rust::parser;
 use rust::tokenizer;
 use std::io::Cursor;
@@ -47,4 +47,4 @@ fn function() {
         r#"fn main(): u32 { 0 }"#,
         "uint32_t main() { 0 }"
     ));
-}
+}*/

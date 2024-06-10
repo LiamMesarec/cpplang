@@ -1,354 +1,357 @@
+use crate::parser::printer::ASTPrinter;
+use crate::parser::visitor::ASTVisitor;
+
 use crate::tokenizer::{Token, TokenInfo};
-use ptree::{Style, TreeItem};
-use std::borrow::Cow;
-use std::io::Write;
 
-mod body;
-mod for_;
-mod function;
-mod if_;
-mod match_;
-mod range;
-mod struct_;
+pub mod parser;
+pub mod printer;
+pub mod visitor;
 
-#[derive(Debug)]
-pub enum Error {
-    Generic(TokenInfo, String),
-    InvalidFor(TokenInfo, String),
-    InvalidAssignment(TokenInfo, String),
-    MissingClosingBrackets(TokenInfo),
-    MissingClosingParantheses(TokenInfo),
-    ExpectedStartingBrackets(TokenInfo),
-    ExpectedStartingParantheses(TokenInfo),
-    MissingType(TokenInfo, String),
+pub struct Ast {
+    pub statements: Vec<ASTStatement>,
 }
 
-impl std::error::Error for Error {}
-
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Error::Generic(token_info, string) => write!(
-                f,
-                "Syntax error: unexpected token '{}' after {} on line {}",
-                token_info.lexeme, string, token_info.start_position.row
-            ),
-            Error::InvalidFor(token_info, string) => write!(
-                f,
-                "Syntax error: invalid for loop structure, unexpected token '{}' on line {}. {}",
-                token_info.lexeme, token_info.start_position.row, string
-            ),
-            Error::InvalidAssignment(token_info, string) => write!(
-                f,
-                "Syntax error: invalid assignment; found '{}' after {} on line {}",
-                token_info.lexeme, string, token_info.start_position.row
-            ),
-            Error::MissingClosingBrackets(token_info) => write!(
-                f,
-                "Syntax error: missing closing brackets on line {}",
-                token_info.start_position.row
-            ),
-            Error::MissingClosingParantheses(token_info) => write!(
-                f,
-                "Syntax error: missing closing parantheses on line {}",
-                token_info.start_position.row
-            ),
-            Error::ExpectedStartingBrackets(token_info) => write!(
-                f,
-                "Syntax error: expected {{, found '{}' on line {}",
-                token_info.lexeme, token_info.start_position.row
-            ),
-            Error::ExpectedStartingParantheses(token_info) => write!(
-                f,
-                "Syntax error: expected (, found '{}' on line {}",
-                token_info.lexeme, token_info.start_position.row
-            ),
-            Error::MissingType(token_info, string) => write!(
-                f,
-                "Syntax error: expected ': Typename' after {}, found '{}' on line {}",
-                token_info.lexeme, string, token_info.start_position.row
-            ),
+impl Ast {
+    pub fn new() -> Self {
+        Self {
+            statements: Vec::new(),
         }
     }
-}
 
-struct ParserInfo<'slice> {
-    tokens: &'slice [TokenInfo],
-    current_token_info: TokenInfo,
-    i: usize,
-}
-
-impl ParserInfo<'_> {
-    fn match_token(&mut self, expected_token: Token) -> bool {
-        self.current_token_info = self.tokens[self.i].clone();
-        if self.tokens[self.i].token == expected_token {
-            self.i += 1;
-            return true;
-        }
-
-        false
+    pub fn add_statement(&mut self, statement: ASTStatement) {
+        self.statements.push(statement);
     }
-
-    fn match_any_of(&mut self, expected_tokens: &[Token]) -> bool {
-        self.current_token_info = self.tokens[self.i].clone();
-        if let Some(token) = self.tokens.get(self.i) {
-            if expected_tokens
-                .iter()
-                .any(|&expected_token| token.token == expected_token)
-            {
-                self.i += 1;
-                return true;
-            }
+    pub fn visit(&self, visitor: &mut dyn ASTVisitor) {
+        for statement in &self.statements {
+            visitor.visit_statement(statement);
         }
-        false
     }
-
-    fn last_n_token_lexemes(&self, n: usize) -> String {
-        let mut counter = 1;
-        let mut string: String = String::from("");
-
-        if self.i == 0 {
-            return String::from("");
-        }
-
-        while n > 0 {
-            string = format!("{} {}", &string, self.tokens[self.i - counter].lexeme);
-            counter += 1;
-
-            if self.i - counter == 0 {
-                break;
-            }
-        }
-
-        string.chars().rev().collect::<String>()
+    pub fn visualize(&self) -> () {
+        let mut printer = ASTPrinter::new();
+        self.visit(&mut printer);
+        println!("{}", printer.result);
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct Node {
-    pub token_info: TokenInfo,
-    pub children: Vec<Box<Node>>,
+pub enum ASTStatementKind {
+    Expression(ASTExpression),
+    Let(ASTLetStatement),
+    If(ASTIfStatement),
+    Block(ASTBlockStatement),
+    While(ASTWhileStatement),
+    FuncDecl(ASTFuncDeclStatement),
+    Return(ASTReturnStatement),
 }
 
-impl TreeItem for Node {
-    type Child = Self;
-    fn write_self<W: Write>(&self, f: &mut W, _style: &Style) -> std::io::Result<()> {
-        write!(
-            f,
-            "{}, ({:?})",
-            self.token_info.lexeme, self.token_info.token
-        )
-    }
-    fn children(&self) -> Cow<[Self::Child]> {
-        Cow::Owned(self.children.iter().map(|node| *node.clone()).collect())
-    }
+#[derive(Debug, Clone)]
+pub struct ASTReturnStatement {
+    pub return_keyword: TokenInfo,
+    pub return_value: Option<ASTExpression>,
 }
 
-impl Node {
-    pub fn new_box(token_info: &TokenInfo) -> Box<Node> {
-        Box::new(Node {
-            token_info: token_info.clone(),
-            children: vec![],
-        })
-    }
-
-    pub fn new_empty_box() -> Box<Node> {
-        Box::new(Node {
-            token_info: TokenInfo::default(),
-            children: vec![],
-        })
-    }
+#[derive(Debug, Clone)]
+pub struct FuncDeclParameter {
+    pub identifier: TokenInfo,
+}
+#[derive(Debug, Clone)]
+pub struct ASTFuncDeclStatement {
+    pub identifier: TokenInfo,
+    pub parameters: Vec<FuncDeclParameter>,
+    pub body: Box<ASTStatement>,
+}
+#[derive(Debug, Clone)]
+pub struct ASTWhileStatement {
+    pub while_keyword: TokenInfo,
+    pub condition: ASTExpression,
+    pub body: Box<ASTStatement>,
+}
+#[derive(Debug, Clone)]
+pub struct ASTBlockStatement {
+    pub statements: Vec<ASTStatement>,
+}
+#[derive(Debug, Clone)]
+pub struct ASTElseStatement {
+    pub else_keyword: TokenInfo,
+    pub else_statement: Box<ASTStatement>,
 }
 
-pub type ParseResult = Result<Box<Node>, Error>;
-
-pub fn parse(tokens: &[TokenInfo]) -> ParseResult {
-    let mut parser_info = ParserInfo {
-        tokens,
-        current_token_info: TokenInfo::default(),
-        i: 0,
-    };
-
-    let mut root = Node::new_empty_box();
-
-    while !parser_info.match_token(Token::EOF) {
-        root.children.push(bitwise(&mut parser_info)?);
-    }
-
-    ptree::print_tree(&*root.clone()).unwrap();
-    Ok(root)
-}
-
-pub fn bitwise(parser_info: &mut ParserInfo) -> ParseResult {
-    let mut node = addition(parser_info)?;
-    while parser_info.match_token(Token::BwAnd) || parser_info.match_token(Token::BwOr) {
-        let mut node_operator = Node::new_box(&parser_info.current_token_info);
-        node_operator.children.push(addition(parser_info)?);
-        node.children.push(node_operator);
-    }
-
-    Ok(node)
-}
-
-fn addition(parser_info: &mut ParserInfo) -> ParseResult {
-    let mut node = multiplication(parser_info)?;
-    while parser_info.match_token(Token::Addition) || parser_info.match_token(Token::Subtraction) {
-        let mut node_operator = Node::new_box(&parser_info.current_token_info);
-        node_operator.children.push(multiplication(parser_info)?);
-        node.children.push(node_operator);
-    }
-
-    Ok(node)
-}
-
-fn multiplication(parser_info: &mut ParserInfo) -> ParseResult {
-    let mut node = comparison_operators(parser_info)?;
-    while parser_info.match_token(Token::Star) || parser_info.match_token(Token::Division) {
-        let mut node_operator = Node::new_box(&parser_info.current_token_info);
-        node_operator
-            .children
-            .push(comparison_operators(parser_info)?);
-        node.children.push(node_operator);
-    }
-
-    Ok(node)
-}
-
-fn comparison_operators(parser_info: &mut ParserInfo) -> ParseResult {
-    let mut node = unary(parser_info)?;
-    while parser_info.match_token(Token::GreaterThan)
-        || parser_info.match_token(Token::LowerThan)
-        || parser_info.match_token(Token::Equals)
-    {
-        let mut node_operator = Node::new_box(&parser_info.current_token_info);
-        node_operator.children.push(unary(parser_info)?);
-        node.children.push(node_operator);
-    }
-
-    Ok(node)
-}
-
-fn assignment(parser_info: &mut ParserInfo, mut parent: Box<Node>) -> ParseResult {
-    if parser_info.match_token(Token::Identifier) {
-        let mut node_identifier = Node::new_box(&parser_info.current_token_info);
-
-        if parser_info.match_token(Token::Colon) {
-            let mut node_colon = Node::new_box(&parser_info.current_token_info);
-
-            if parser_info.match_token(Token::Identifier) {
-                node_colon
-                    .children
-                    .push(Node::new_box(&parser_info.current_token_info));
-            }
-            node_identifier.children.push(node_colon);
-
-            parent.children.push(node_identifier);
-
-            if parser_info.match_token(Token::Assignment) {
-                let mut node_assigment = Node::new_box(&parser_info.current_token_info);
-                node_assigment.children.push(bitwise(parser_info)?);
-                parent.children.push(node_assigment);
-                return Ok(parent);
-            }
-        } else {
-            parent.children.push(node_identifier);
-
-            if parser_info.match_token(Token::Assignment) {
-                let mut node_assigment = Node::new_box(&parser_info.current_token_info);
-                node_assigment.children.push(bitwise(parser_info)?);
-                parent.children.push(node_assigment);
-                return Ok(parent);
-            }
+impl ASTElseStatement {
+    pub fn new(else_keyword: TokenInfo, else_statement: ASTStatement) -> Self {
+        ASTElseStatement {
+            else_keyword,
+            else_statement: Box::new(else_statement),
         }
     }
-
-    Err(Error::InvalidAssignment(
-        parser_info.current_token_info.clone(),
-        parser_info.last_n_token_lexemes(3),
-    ))
 }
 
-fn unary(parser_info: &mut ParserInfo) -> ParseResult {
-    if parser_info.match_token(Token::Addition) || parser_info.match_token(Token::Subtraction) {
-        let mut node = Node::new_box(&parser_info.current_token_info);
-        node.children.push(primary(parser_info)?);
-        return Ok(node);
-    } else {
-        return Ok(primary(parser_info)?);
+#[derive(Debug, Clone)]
+pub struct ASTIfStatement {
+    pub if_keyword: TokenInfo,
+    pub condition: ASTExpression,
+    pub then_branch: Box<ASTStatement>,
+    pub else_branch: Option<ASTElseStatement>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ASTLetStatement {
+    pub identifier: TokenInfo,
+    pub initializer: ASTExpression,
+}
+
+#[derive(Debug, Clone)]
+pub struct ASTStatement {
+    kind: ASTStatementKind,
+}
+
+impl ASTStatement {
+    pub fn new(kind: ASTStatementKind) -> Self {
+        ASTStatement { kind }
+    }
+    pub fn expression(expr: ASTExpression) -> Self {
+        ASTStatement::new(ASTStatementKind::Expression(expr))
+    }
+
+    pub fn let_statement(identifier: TokenInfo, initializer: ASTExpression) -> Self {
+        ASTStatement::new(ASTStatementKind::Let(ASTLetStatement {
+            identifier,
+            initializer,
+        }))
+    }
+
+    pub fn if_statement(
+        if_keyword: TokenInfo,
+        condition: ASTExpression,
+        then: ASTStatement,
+        else_statement: Option<ASTElseStatement>,
+    ) -> Self {
+        ASTStatement::new(ASTStatementKind::If(ASTIfStatement {
+            if_keyword,
+            condition,
+            then_branch: Box::new(then),
+            else_branch: else_statement,
+        }))
+    }
+
+    pub fn block_statement(statements: Vec<ASTStatement>) -> Self {
+        ASTStatement::new(ASTStatementKind::Block(ASTBlockStatement { statements }))
+    }
+
+    pub fn while_statement(
+        while_keyword: TokenInfo,
+        condition: ASTExpression,
+        body: ASTStatement,
+    ) -> Self {
+        ASTStatement::new(ASTStatementKind::While(ASTWhileStatement {
+            while_keyword,
+            condition,
+            body: Box::new(body),
+        }))
+    }
+
+    pub fn return_statement(
+        return_keyword: TokenInfo,
+        return_value: Option<ASTExpression>,
+    ) -> Self {
+        ASTStatement::new(ASTStatementKind::Return(ASTReturnStatement {
+            return_keyword,
+            return_value,
+        }))
+    }
+
+    pub fn func_decl_statement(
+        identifier: TokenInfo,
+        parameters: Vec<FuncDeclParameter>,
+        body: ASTStatement,
+    ) -> Self {
+        ASTStatement::new(ASTStatementKind::FuncDecl(ASTFuncDeclStatement {
+            identifier,
+            parameters,
+            body: Box::new(body),
+        }))
     }
 }
 
-fn parameter_list(parser_info: &mut ParserInfo, mut parent: Box<Node>) -> ParseResult {
-    while parser_info.match_token(Token::Identifier) {
-        parent
-            .children
-            .push(Node::new_box(&parser_info.current_token_info));
-
-        if !parser_info.match_token(Token::Colon) {
-            return Err(Error::MissingType(
-                parser_info.current_token_info.clone(),
-                parser_info.last_n_token_lexemes(3),
-            ));
-        }
-
-        parent
-            .children
-            .push(Node::new_box(&parser_info.current_token_info));
-
-        if !parser_info.match_token(Token::Identifier) {
-            return Err(Error::MissingType(
-                parser_info.current_token_info.clone(),
-                parser_info.last_n_token_lexemes(3),
-            ));
-        }
-
-        parent
-            .children
-            .push(Node::new_box(&parser_info.current_token_info));
-
-        if !parser_info.match_token(Token::Comma) {
-            break;
-        }
-
-        parent
-            .children
-            .push(Node::new_box(&parser_info.current_token_info));
-    }
-
-    Ok(parent)
+#[derive(Debug, Clone)]
+pub enum ASTExpressionKind {
+    Number(ASTNumberExpression),
+    Binary(ASTBinaryExpression),
+    Unary(ASTUnaryExpression),
+    Parenthesized(ASTParenthesizedExpression),
+    Variable(ASTVariableExpression),
+    Assignment(ASTAssignmentExpression),
+    Boolean(ASTBooleanExpression),
+    Call(ASTCallExpression),
 }
 
-fn primary(parser_info: &mut ParserInfo) -> ParseResult {
-    if parser_info.match_token(Token::Let) {
-        return assignment(parser_info, Node::new_box(&parser_info.current_token_info));
-    } else if parser_info.match_token(Token::Fn) {
-        return function::function(parser_info);
-    } else if parser_info.match_token(Token::For) {
-        return for_::for_(parser_info);
-    } else if parser_info.match_token(Token::If) {
-        return if_::if_(parser_info);
-    } else if parser_info.match_token(Token::Match) {
-        return match_::match_(parser_info);
-    } else if parser_info.match_token(Token::Struct) {
-        return struct_::struct_(parser_info);
-    } else if parser_info.match_token(Token::LeftParantheses) {
-        let mut node = Node::new_box(&parser_info.current_token_info);
-        node.children.push(bitwise(parser_info)?);
-        if !parser_info.match_token(Token::RightParantheses) {
-            return Err(Error::MissingClosingParantheses(
-                parser_info.current_token_info.clone(),
-            ));
-        }
+#[derive(Debug, Clone)]
+pub struct ASTCallExpression {
+    pub identifier: TokenInfo,
+    pub arguments: Vec<ASTExpression>,
+}
+#[derive(Debug, Clone)]
+pub struct ASTBooleanExpression {
+    pub value: bool,
+    pub token: TokenInfo,
+}
+#[derive(Debug, Clone)]
+pub struct ASTAssignmentExpression {
+    pub identifier: TokenInfo,
+    pub expression: Box<ASTExpression>,
+}
+#[derive(Debug, Clone)]
+pub enum ASTUnaryOperatorKind {
+    Subtraction,
+    BwNot,
+}
+#[derive(Debug, Clone)]
+pub struct ASTUnaryOperator {
+    kind: ASTUnaryOperatorKind,
+    token: TokenInfo,
+}
 
-        Ok(node)
-    } else if parser_info.match_token(Token::LeftBraces) {
-        return body::body(parser_info);
-    } else if parser_info.match_token(Token::Identifier) || parser_info.match_token(Token::Number) {
-        Ok(Node::new_box(&parser_info.current_token_info))
-    } else {
-        Err(Error::Generic(
-            parser_info.current_token_info.clone(),
-            parser_info.last_n_token_lexemes(3),
+impl ASTUnaryOperator {
+    pub fn new(kind: ASTUnaryOperatorKind, token: TokenInfo) -> Self {
+        ASTUnaryOperator { kind, token }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct ASTUnaryExpression {
+    pub operator: ASTUnaryOperator,
+    pub operand: Box<ASTExpression>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ASTVariableExpression {
+    pub identifier: TokenInfo,
+}
+
+impl ASTVariableExpression {
+    pub fn identifier(&self) -> &str {
+        &self.identifier.lexeme
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum ASTBinaryOperatorKind {
+    // Arithmetic
+    Addition,
+    Subtraction,
+
+    Star,
+    Division,
+    // Power,
+    // Bitwise
+    BwAnd,
+    BwOr,
+    BwXor,
+    // Relational
+    Equals,
+    Inequal,
+    LowerThan,
+    GreaterThan,
+}
+
+#[derive(Debug, Clone)]
+pub struct ASTBinaryOperator {
+    kind: ASTBinaryOperatorKind,
+    token: TokenInfo,
+}
+impl ASTBinaryOperator {
+    pub fn new(kind: ASTBinaryOperatorKind, token: TokenInfo) -> Self {
+        ASTBinaryOperator { kind, token }
+    }
+    pub fn precedence(&self) -> u8 {
+        match self.kind {
+            ASTBinaryOperatorKind::Star => 19,
+            ASTBinaryOperatorKind::Division => 19,
+            ASTBinaryOperatorKind::Addition => 18,
+            ASTBinaryOperatorKind::Subtraction => 18,
+            ASTBinaryOperatorKind::BwAnd => 17,
+            ASTBinaryOperatorKind::BwXor => 16,
+            ASTBinaryOperatorKind::BwOr => 15,
+            ASTBinaryOperatorKind::Equals => 30,
+            ASTBinaryOperatorKind::Inequal => 30,
+            ASTBinaryOperatorKind::LowerThan => 29,
+            ASTBinaryOperatorKind::GreaterThan => 29,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct ASTBinaryExpression {
+    left: Box<ASTExpression>,
+    operator: ASTBinaryOperator,
+    right: Box<ASTExpression>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ASTNumberExpression {
+    pub num: TokenInfo,
+}
+
+#[derive(Debug, Clone)]
+pub struct ASTParenthesizedExpression {
+    expression: Box<ASTExpression>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ASTExpression {
+    kind: ASTExpressionKind,
+}
+
+impl ASTExpression {
+    pub fn new(kind: ASTExpressionKind) -> Self {
+        ASTExpression { kind }
+    }
+    pub fn number(num: TokenInfo) -> Self {
+        ASTExpression::new(ASTExpressionKind::Number(ASTNumberExpression { num }))
+    }
+    pub fn binary(operator: ASTBinaryOperator, left: ASTExpression, right: ASTExpression) -> Self {
+        ASTExpression::new(ASTExpressionKind::Binary(ASTBinaryExpression {
+            left: Box::new(left),
+            operator,
+            right: Box::new(right),
+        }))
+    }
+    pub fn parenthesized(expression: ASTExpression) -> Self {
+        ASTExpression::new(ASTExpressionKind::Parenthesized(
+            ASTParenthesizedExpression {
+                expression: Box::new(expression),
+            },
         ))
+    }
+    pub fn identifier(identifier: TokenInfo) -> Self {
+        ASTExpression::new(ASTExpressionKind::Variable(ASTVariableExpression {
+            identifier,
+        }))
+    }
+    pub fn unary(operator: ASTUnaryOperator, operand: ASTExpression) -> Self {
+        ASTExpression::new(ASTExpressionKind::Unary(ASTUnaryExpression {
+            operator,
+            operand: Box::new(operand),
+        }))
+    }
+
+    pub fn assignment(identifier: TokenInfo, expression: ASTExpression) -> Self {
+        ASTExpression::new(ASTExpressionKind::Assignment(ASTAssignmentExpression {
+            identifier,
+            expression: Box::new(expression),
+        }))
+    }
+
+    pub fn boolean(token: TokenInfo, value: bool) -> Self {
+        ASTExpression::new(ASTExpressionKind::Boolean(ASTBooleanExpression {
+            token,
+            value,
+        }))
+    }
+
+    pub fn call(identifier: TokenInfo, arguments: Vec<ASTExpression>) -> Self {
+        ASTExpression::new(ASTExpressionKind::Call(ASTCallExpression {
+            identifier,
+            arguments,
+        }))
     }
 }
