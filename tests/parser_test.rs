@@ -1,5 +1,5 @@
-use rust::parser::Ast;
 use rust::parser::parser::Node;
+use rust::parser::Ast;
 use rust::tokenizer;
 use std::io::Cursor;
 
@@ -8,9 +8,7 @@ fn is_parsable(input: &str) -> bool {
         Ok(tokens) => {
             let mut node = Node::new(tokens);
             match node.next_statement() {
-                Some(_) => {
-                    true
-                }
+                Some(_) => true,
                 None => false,
             }
         }
@@ -133,4 +131,3 @@ fn struct_() {
 "#
     ));
 }
-
