@@ -1,40 +1,26 @@
 use crate::parser::visitor::ASTVisitor;
 use crate::parser::*;
-use clap::builder::styling::Reset;
-use clap::builder::Resettable::Reset as OtherReset;
-pub struct ASTPrinter {
+
+pub struct ASTEvaluator {
     indent: usize,
     pub result: String,
 }
 
-impl ASTPrinter {
+impl ASTEvaluator {
     fn add_whitespace(&mut self) {
         self.result.push_str(" ");
     }
 
-    fn add_newline(&mut self) {
-        self.result.push_str(
-            "
-",
-        );
-    }
-
     fn add_keyword(&mut self, keyword: &str) {
-        self.result.push_str(&format!("{}", keyword));
+        self.result.push_str(&keyword);
     }
 
     fn add_text(&mut self, text: &str) {
-        self.result.push_str(&format!("{}", text));
+        self.result.push_str(&text);
     }
 
     fn add_variable(&mut self, variable: &str) {
-        self.result.push_str(&format!("{}", variable));
-    }
-
-    fn add_padding(&mut self) {
-        for _ in 0..self.indent {
-            self.result.push_str("  ");
-        }
+        self.result.push_str(&variable);
     }
 
     fn add_boolean(&mut self, boolean: bool) {
@@ -49,9 +35,10 @@ impl ASTPrinter {
     }
 }
 
-impl ASTVisitor<'_> for ASTPrinter {
+
+impl ASTVisitor<'_> for ASTEvaluator {
     fn visit_func_decl_statement(&mut self, func_decl_statement: &ASTFuncDeclStatement) {
-        self.add_keyword("func");
+        self.add_keyword("fn");
         self.add_whitespace();
         self.add_text(&func_decl_statement.identifier.lexeme);
         let are_parameters_empty = func_decl_statement.parameters.is_empty();
@@ -89,20 +76,20 @@ impl ASTVisitor<'_> for ASTPrinter {
     }
     fn visit_block_statement(&mut self, block_statement: &ASTBlockStatement) {
         self.add_text("{");
-        self.add_newline();
         self.indent += 1;
         for statement in &block_statement.statements {
             self.visit_statement(statement);
         }
         self.indent -= 1;
-        self.add_padding();
         self.add_text("}");
     }
 
     fn visit_if_statement(&mut self, if_statement: &ASTIfStatement) {
         self.add_keyword("if");
         self.add_whitespace();
+        self.add_text("(");
         self.visit_expression(&if_statement.condition);
+        self.add_text(")");
         self.add_whitespace();
         self.visit_statement(&if_statement.then_branch);
 
@@ -124,7 +111,6 @@ impl ASTVisitor<'_> for ASTPrinter {
     }
 
     fn visit_statement(&mut self, statement: &ASTStatement) {
-        self.add_padding();
         Self::do_visit_statement(self, statement);
         self.result.push_str(&format!("\n"));
     }

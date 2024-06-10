@@ -1,29 +1,23 @@
-/*use rust::evaluator;
+use rust::evaluator;
 use rust::parser;
 use rust::tokenizer;
 use std::io::Cursor;
+use rust::parser::parser::parse;
 
 fn evaluate_and_compare(input: &str, expected_output: &str) -> bool {
     match tokenizer::tokenize(Cursor::new(input)) {
-        Ok(tokens) => match parser::parse(&tokens) {
-            Ok(ast) => match evaluator::evaluate(ast) {
-                Ok(output) => {
-                    if output != expected_output {
-                        println!("output: {}", output);
-                        return false;
-                    }
-
-                    return true;
-                }
-                Err(error) => {
-                    println!("{}", error);
+        Ok(tokens) => match parse(tokens) {
+            Some(ast) => {
+                let output = evaluator::evaluate(&ast);
+                println!("{:?}", ast.statements);
+                if output != expected_output {
+                    println!("output: {}", output);
                     return false;
                 }
+
+                return true;
             },
-            Err(error) => {
-                println!("{}", error);
-                return false;
-            }
+            None => return false,
         },
         Err(error) => {
             println!("{}", error);
@@ -42,9 +36,22 @@ fn assignment() {
 }
 
 #[test]
+#[ignore]
 fn function() {
     assert!(evaluate_and_compare(
         r#"fn main(): u32 { 0 }"#,
         "uint32_t main() { 0 }"
     ));
-}*/
+}
+
+#[test]
+fn if_() {
+    assert!(evaluate_and_compare(
+        r#"
+    if i == 10 {
+        20
+    }
+"#, "if (i == 10) { 20 }"
+    ));
+}
+
