@@ -126,10 +126,20 @@ impl Node {
     fn parse_let_statement(&mut self) -> ASTStatement {
         self.consume_and_check(Token::Let);
         let identifier = self.consume_and_check(Token::Identifier).clone();
+
+        let type_annotation = if self.peek(1).token == Token::Colon {
+            self.consume_and_check(Token::Colon);
+            Some(self.consume_and_check(Token::Identifier).clone())
+        } else {
+            None
+        };
+
         self.consume_and_check(Token::Equals);
         let expr = self.parse_expression();
-        return ASTStatement::let_statement(identifier, expr);
+
+        return ASTStatement::let_statement(identifier, type_annotation, expr);
     }
+
     fn parse_expression_statement(&mut self) -> ASTStatement {
         let expr = self.parse_expression();
         return ASTStatement::expression(expr);

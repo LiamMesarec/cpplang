@@ -96,6 +96,7 @@ pub struct ASTIfStatement {
 #[derive(Debug, Clone)]
 pub struct ASTLetStatement {
     pub identifier: TokenInfo,
+    pub type_annotation: Option<TokenInfo>, // Added this field
     pub initializer: ASTExpression,
 }
 
@@ -112,9 +113,14 @@ impl ASTStatement {
         ASTStatement::new(ASTStatementKind::Expression(expr))
     }
 
-    pub fn let_statement(identifier: TokenInfo, initializer: ASTExpression) -> Self {
+    pub fn let_statement(
+        identifier: TokenInfo,
+        type_annotation: Option<TokenInfo>,
+        initializer: ASTExpression,
+    ) -> Self {
         ASTStatement::new(ASTStatementKind::Let(ASTLetStatement {
             identifier,
+            type_annotation,
             initializer,
         }))
     }
@@ -281,9 +287,9 @@ impl ASTBinaryOperator {
 
 #[derive(Debug, Clone)]
 pub struct ASTBinaryExpression {
-    left: Box<ASTExpression>,
-    operator: ASTBinaryOperator,
-    right: Box<ASTExpression>,
+    pub left: Box<ASTExpression>,
+    pub operator: ASTBinaryOperator,
+    pub right: Box<ASTExpression>,
 }
 
 #[derive(Debug, Clone)]
@@ -293,12 +299,12 @@ pub struct ASTNumberExpression {
 
 #[derive(Debug, Clone)]
 pub struct ASTParenthesizedExpression {
-    expression: Box<ASTExpression>,
+    pub expression: Box<ASTExpression>,
 }
 
 #[derive(Debug, Clone)]
 pub struct ASTExpression {
-    kind: ASTExpressionKind,
+    pub kind: ASTExpressionKind,
 }
 
 impl ASTExpression {
