@@ -212,8 +212,8 @@ pub enum ASTUnaryOperatorKind {
 }
 #[derive(Debug, Clone)]
 pub struct ASTUnaryOperator {
-    kind: ASTUnaryOperatorKind,
-    token: TokenInfo,
+    pub kind: ASTUnaryOperatorKind,
+    pub token: TokenInfo,
 }
 
 impl ASTUnaryOperator {
@@ -261,8 +261,8 @@ pub enum ASTBinaryOperatorKind {
 
 #[derive(Debug, Clone)]
 pub struct ASTBinaryOperator {
-    kind: ASTBinaryOperatorKind,
-    token: TokenInfo,
+    pub kind: ASTBinaryOperatorKind,
+    pub token: TokenInfo,
 }
 impl ASTBinaryOperator {
     pub fn new(kind: ASTBinaryOperatorKind, token: TokenInfo) -> Self {
