@@ -1,8 +1,8 @@
+use rust::parser;
 use rust::parser::parser::Node;
 use rust::parser::Ast;
 use rust::tokenizer;
 use std::io::Cursor;
-use rust::parser;
 
 fn is_parsable(input: &str) -> bool {
     match tokenizer::tokenize(Cursor::new(input)) {
@@ -65,12 +65,12 @@ fn for_() {
     ));
 
     /*assert!(is_parsable(
-        r#"
-    for i in 0..9 {
-        i
-    }
-"#
-    ));*/
+            r#"
+        for i in 0..9 {
+            i
+        }
+    "#
+        ));*/
 }
 
 #[test]
