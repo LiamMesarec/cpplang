@@ -59,6 +59,7 @@ impl Node {
             Token::LeftBraces => self.parse_block_statement(),
             Token::While => self.parse_while_statement(),
             Token::Fn => self.parse_function_declaration(),
+            Token::For => self.parse_for_statement(),
             _ => self.parse_expression_statement(),
         }
     }
@@ -96,6 +97,15 @@ impl Node {
         ASTStatement::while_statement(while_keyword, condition_expr, body)
     }
 
+    fn parse_for_statement(&mut self) -> ASTStatement {
+        let for_keyword = self.consume_and_check(Token::For).clone();
+        let identifier = self.consume_and_check(Token::Identifier).clone();
+        self.consume_and_check(Token::In);
+        let iterable = self.parse_expression();
+        let body = self.parse_statement();
+        ASTStatement::for_statement(for_keyword, identifier, iterable, body)
+    }
+
     fn parse_block_statement(&mut self) -> ASTStatement {
         self.consume_and_check(Token::LeftBraces);
         let mut statements = Vec::new();
@@ -109,7 +119,6 @@ impl Node {
     fn parse_if_statement(&mut self) -> ASTStatement {
         let if_keyword = self.consume_and_check(Token::If).clone();
         let condition_expr = self.parse_expression();
-        println!("{:?}", condition_expr);
         let then = self.parse_statement();
         let else_statement = self.parse_optional_else_statement();
         ASTStatement::if_statement(if_keyword, condition_expr, then, else_statement)
@@ -126,6 +135,14 @@ impl Node {
 
     fn parse_let_statement(&mut self) -> ASTStatement {
         self.consume_and_check(Token::Let);
+
+        let is_mut = if self.current().token == Token::Mut {
+            self.consume_and_check(Token::Mut);
+            true
+        } else {
+            false
+        };
+
         let identifier = self.consume_and_check(Token::Identifier).clone();
 
         let type_annotation = if self.peek(0).token == Token::Colon {
@@ -139,9 +156,8 @@ impl Node {
 
         let expr = self.parse_expression();
 
-        return ASTStatement::let_statement(identifier, type_annotation, expr);
+        return ASTStatement::let_statement(identifier, type_annotation, is_mut, expr);
     }
-
     fn parse_expression_statement(&mut self) -> ASTStatement {
         let expr = self.parse_expression();
         return ASTStatement::expression(expr);

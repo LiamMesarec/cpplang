@@ -1,5 +1,5 @@
-use crate::parser::visitor::ASTVisitor;
 use crate::parser::parser::Node;
+use crate::parser::visitor::ASTVisitor;
 use crate::tokenizer::{Token, TokenInfo};
 
 pub mod parser;
@@ -55,6 +55,7 @@ pub enum ASTStatementKind {
     While(ASTWhileStatement),
     FuncDecl(ASTFuncDeclStatement),
     Return(ASTReturnStatement),
+    For(ASTForStatement),
 }
 
 #[derive(Debug, Clone)]
@@ -79,6 +80,31 @@ pub struct ASTWhileStatement {
     pub condition: ASTExpression,
     pub body: Box<ASTStatement>,
 }
+
+#[derive(Debug, Clone)]
+pub struct ASTForStatement {
+    pub for_keyword: TokenInfo,
+    pub identifier: TokenInfo,
+    pub iterable: ASTExpression,
+    pub body: Box<ASTStatement>,
+}
+
+impl ASTForStatement {
+    pub fn new(
+        for_keyword: TokenInfo,
+        identifier: TokenInfo,
+        iterable: ASTExpression,
+        body: ASTStatement,
+    ) -> Self {
+        ASTForStatement {
+            for_keyword,
+            identifier,
+            iterable,
+            body: Box::new(body),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct ASTBlockStatement {
     pub statements: Vec<ASTStatement>,
@@ -108,8 +134,9 @@ pub struct ASTIfStatement {
 
 #[derive(Debug, Clone)]
 pub struct ASTLetStatement {
+    pub is_mut: bool,
     pub identifier: TokenInfo,
-    pub type_annotation: Option<TokenInfo>, // Added this field
+    pub type_annotation: Option<TokenInfo>,
     pub initializer: ASTExpression,
 }
 
@@ -129,13 +156,29 @@ impl ASTStatement {
     pub fn let_statement(
         identifier: TokenInfo,
         type_annotation: Option<TokenInfo>,
+        is_mut: bool,
         initializer: ASTExpression,
     ) -> Self {
         ASTStatement::new(ASTStatementKind::Let(ASTLetStatement {
             identifier,
             type_annotation,
+            is_mut,
             initializer,
         }))
+    }
+
+    pub fn for_statement(
+        for_keyword: TokenInfo,
+        identifier: TokenInfo,
+        iterable: ASTExpression,
+        body: ASTStatement,
+    ) -> Self {
+        ASTStatement::new(ASTStatementKind::For(ASTForStatement::new(
+            for_keyword,
+            identifier,
+            iterable,
+            body,
+        )))
     }
 
     pub fn if_statement(

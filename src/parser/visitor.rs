@@ -1,8 +1,9 @@
 use crate::parser::{
     ASTAssignmentExpression, ASTBinaryExpression, ASTBlockStatement, ASTBooleanExpression,
-    ASTCallExpression, ASTExpression, ASTExpressionKind, ASTFuncDeclStatement, ASTIfStatement,
-    ASTLetStatement, ASTNumberExpression, ASTParenthesizedExpression, ASTReturnStatement,
-    ASTStatement, ASTStatementKind, ASTUnaryExpression, ASTVariableExpression, ASTWhileStatement,
+    ASTCallExpression, ASTExpression, ASTExpressionKind, ASTForStatement, ASTFuncDeclStatement,
+    ASTIfStatement, ASTLetStatement, ASTNumberExpression, ASTParenthesizedExpression,
+    ASTReturnStatement, ASTStatement, ASTStatementKind, ASTUnaryExpression, ASTVariableExpression,
+    ASTWhileStatement,
 };
 
 pub trait ASTVisitor<'a> {
@@ -29,6 +30,9 @@ pub trait ASTVisitor<'a> {
             ASTStatementKind::Return(stmt) => {
                 self.visit_return_statement(stmt);
             }
+            ASTStatementKind::For(stmt) => {
+                self.visit_for_statement(stmt);
+            }
         }
     }
 
@@ -44,6 +48,13 @@ pub trait ASTVisitor<'a> {
         self.visit_expression(&while_statement.condition);
         self.visit_statement(&while_statement.body);
     }
+
+    fn visit_for_statement(&mut self, for_statement: &ASTForStatement) {
+        // Add this function
+        self.visit_expression(&for_statement.iterable);
+        self.visit_statement(&for_statement.body);
+    }
+
     fn visit_block_statement(&mut self, block_statement: &ASTBlockStatement) {
         for statement in &block_statement.statements {
             self.visit_statement(statement);
