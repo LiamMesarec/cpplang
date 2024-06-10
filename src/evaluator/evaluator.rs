@@ -35,7 +35,6 @@ impl ASTEvaluator {
     }
 }
 
-
 impl ASTVisitor<'_> for ASTEvaluator {
     fn visit_func_decl_statement(&mut self, func_decl_statement: &ASTFuncDeclStatement) {
         self.add_keyword("fn");

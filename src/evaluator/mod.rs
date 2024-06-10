@@ -1,6 +1,6 @@
 mod evaluator;
-use crate::parser::Ast;
 use crate::evaluator::evaluator::ASTEvaluator;
+use crate::parser::Ast;
 
 pub fn evaluate(ast: &Ast) -> String {
     let mut eval = ASTEvaluator::new();

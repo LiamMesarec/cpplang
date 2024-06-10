@@ -1,8 +1,8 @@
 use rust::evaluator;
 use rust::parser;
+use rust::parser::parser::parse;
 use rust::tokenizer;
 use std::io::Cursor;
-use rust::parser::parser::parse;
 
 fn evaluate_and_compare(input: &str, expected_output: &str) -> bool {
     match tokenizer::tokenize(Cursor::new(input)) {
@@ -16,7 +16,7 @@ fn evaluate_and_compare(input: &str, expected_output: &str) -> bool {
                 }
 
                 return true;
-            },
+            }
             None => return false,
         },
         Err(error) => {
@@ -51,7 +51,7 @@ fn if_() {
     if i < 10 {
         20
     }
-"#, "if (i < 10) { 20 }"
+"#,
+        "if (i < 10) { 20 }"
     ));
 }
-
