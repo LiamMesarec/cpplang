@@ -1,10 +1,8 @@
-use crate::parser::printer::ASTPrinter;
 use crate::parser::visitor::ASTVisitor;
 
 use crate::tokenizer::{Token, TokenInfo};
 
 pub mod parser;
-pub mod printer;
 pub mod visitor;
 
 pub struct Ast {
@@ -25,11 +23,6 @@ impl Ast {
         for statement in &self.statements {
             visitor.visit_statement(statement);
         }
-    }
-    pub fn visualize(&self) -> () {
-        let mut printer = ASTPrinter::new();
-        self.visit(&mut printer);
-        println!("{}", printer.result);
     }
 }
 

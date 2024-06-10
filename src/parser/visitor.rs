@@ -1,4 +1,3 @@
-use crate::parser::printer::ASTPrinter;
 use crate::parser::{
     ASTAssignmentExpression, ASTBinaryExpression, ASTBlockStatement, ASTBooleanExpression,
     ASTCallExpression, ASTExpression, ASTExpressionKind, ASTFuncDeclStatement, ASTIfStatement,
