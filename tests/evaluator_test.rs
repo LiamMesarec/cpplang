@@ -48,10 +48,10 @@ fn function() {
 fn if_() {
     assert!(evaluate_and_compare(
         r#"
-    if i == 10 {
+    if i < 10 {
         20
     }
-"#, "if (i == 10) { 20 }"
+"#, "if (i < 10) { 20 }"
     ));
 }
 

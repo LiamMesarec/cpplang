@@ -76,11 +76,11 @@ impl ASTVisitor<'_> for ASTEvaluator {
     }
     fn visit_block_statement(&mut self, block_statement: &ASTBlockStatement) {
         self.add_text("{");
-        self.indent += 1;
+        self.add_whitespace();
         for statement in &block_statement.statements {
             self.visit_statement(statement);
+            self.add_whitespace();
         }
-        self.indent -= 1;
         self.add_text("}");
     }
 
@@ -112,7 +112,6 @@ impl ASTVisitor<'_> for ASTEvaluator {
 
     fn visit_statement(&mut self, statement: &ASTStatement) {
         Self::do_visit_statement(self, statement);
-        self.result.push_str(&format!("\n"));
     }
 
     fn visit_call_expression(&mut self, call_expression: &ASTCallExpression) {
