@@ -87,10 +87,13 @@ impl ASTVisitor<'_> for ASTEvaluator {
         self.add_keyword("if");
         self.add_whitespace();
         self.add_text("(");
+        self.add_whitespace();
         self.visit_expression(&if_statement.condition);
+        self.add_whitespace();
         self.add_text(")");
         self.add_whitespace();
         self.visit_statement(&if_statement.then_branch);
+        self.add_whitespace();
 
         if let Some(else_branch) = &if_statement.else_branch {
             self.add_keyword("else");
