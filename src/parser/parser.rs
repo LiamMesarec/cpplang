@@ -127,6 +127,7 @@ impl Node {
     fn parse_if_statement(&mut self) -> ASTStatement {
         let if_keyword = self.consume_and_check(Token::If).clone();
         let condition_expr = self.parse_expression();
+        println!("{:?}", condition_expr);
         let then = self.parse_statement();
         let else_statement = self.parse_optional_else_statement();
         ASTStatement::if_statement(if_keyword, condition_expr, then, else_statement)
@@ -145,14 +146,15 @@ impl Node {
         self.consume_and_check(Token::Let);
         let identifier = self.consume_and_check(Token::Identifier).clone();
 
-        let type_annotation = if self.peek(1).token == Token::Colon {
+        let type_annotation = if self.peek(0).token == Token::Colon {
             self.consume_and_check(Token::Colon);
             Some(self.consume_and_check(Token::Identifier).clone())
         } else {
             None
         };
 
-        self.consume_and_check(Token::Equals);
+        self.consume_and_check(Token::Assignment);
+
         let expr = self.parse_expression();
 
         return ASTStatement::let_statement(identifier, type_annotation, expr);
@@ -169,9 +171,9 @@ impl Node {
 
     fn parse_assignment_expression(&mut self) -> ASTExpression {
         if self.current().token == Token::Identifier {
-            if self.peek(1).token == Token::Equals {
+            if self.peek(1).token == Token::Assignment {
                 let identifier = self.consume_and_check(Token::Identifier).clone();
-                self.consume_and_check(Token::Equals);
+                self.consume_and_check(Token::Assignment);
                 let expr = self.parse_expression();
                 return ASTExpression::assignment(identifier, expr);
             }
@@ -281,7 +283,7 @@ impl Node {
     fn consume_and_check(&self, kind: Token) -> &TokenInfo {
         let token = self.consume();
         if token.token != kind {
-            println!("Error");
+            println!("{} Error", token.lexeme);
         }
         token
     }

@@ -18,7 +18,6 @@ fn is_parsable(input: &str) -> bool {
 }
 
 #[test]
-#[ignore]
 fn assignment() {
     assert!(is_parsable(
         r#"
