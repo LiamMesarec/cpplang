@@ -1,16 +1,15 @@
+use rust::parser::parser::parse;
 use rust::parser::parser::Node;
 use rust::parser::Ast;
 use rust::tokenizer;
 use std::io::Cursor;
-use rust::parser::parser::parse;
 
 fn is_parsable(input: &str) -> bool {
     match tokenizer::tokenize(Cursor::new(input)) {
-        Ok(tokens) => {
-            match parse(tokens) {
+        Ok(tokens) => match parse(tokens) {
             Some(_) => return true,
-            None => return false }
-        }
+            None => return false,
+        },
         Err(error) => {
             println!("{}", error);
             false
