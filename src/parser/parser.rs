@@ -32,25 +32,7 @@ pub struct Node {
     tokens: Vec<TokenInfo>,
     current: Counter,
 }
-pub fn parse(tokens: Vec<TokenInfo>) -> Option<Ast> {
-    let mut ast: Ast = Ast::new();
-    let mut parser = Node::new(tokens);
 
-    loop {
-        match parser.next_statement() {
-            Some(stmt) => ast.add_statement(stmt),
-            None => {
-                if parser.is_at_end() {
-                    break;
-                } else {
-                    return None;
-                }
-            }
-        }
-    }
-
-    return Some(ast);
-}
 impl Node {
     pub fn new(tokens: Vec<TokenInfo>) -> Self {
         Self {
@@ -66,7 +48,7 @@ impl Node {
         Some(self.parse_statement())
     }
 
-    fn is_at_end(&self) -> bool {
+    pub fn is_at_end(&self) -> bool {
         self.current().token == Token::EOF
     }
 

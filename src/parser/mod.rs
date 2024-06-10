@@ -1,5 +1,5 @@
 use crate::parser::visitor::ASTVisitor;
-
+use crate::parser::parser::Node;
 use crate::tokenizer::{Token, TokenInfo};
 
 pub mod parser;
@@ -24,6 +24,26 @@ impl Ast {
             visitor.visit_statement(statement);
         }
     }
+}
+
+pub fn parse(tokens: Vec<TokenInfo>) -> Option<Ast> {
+    let mut ast: Ast = Ast::new();
+    let mut parser = Node::new(tokens);
+
+    loop {
+        match parser.next_statement() {
+            Some(stmt) => ast.add_statement(stmt),
+            None => {
+                if parser.is_at_end() {
+                    break;
+                } else {
+                    return None;
+                }
+            }
+        }
+    }
+
+    return Some(ast);
 }
 
 #[derive(Debug, Clone)]

@@ -1,12 +1,11 @@
 use rust::evaluator;
 use rust::parser;
-use rust::parser::parser::parse;
 use rust::tokenizer;
 use std::io::Cursor;
 
 fn evaluate_and_compare(input: &str, expected_output: &str) -> bool {
     match tokenizer::tokenize(Cursor::new(input)) {
-        Ok(tokens) => match parse(tokens) {
+        Ok(tokens) => match parser::parse(tokens) {
             Some(ast) => {
                 let output = evaluator::evaluate(&ast);
                 println!("{:?}", ast.statements);
