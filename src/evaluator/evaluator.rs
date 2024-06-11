@@ -1,6 +1,6 @@
+use crate::evaluator::to_cpp;
 use crate::parser::visitor::ASTVisitor;
 use crate::parser::*;
-use crate::evaluator::to_cpp;
 use std::collections::HashMap;
 
 pub struct ASTEvaluator {
@@ -34,7 +34,7 @@ impl ASTEvaluator {
         Self {
             indent: 0,
             result: String::new(),
-            types: to_cpp::init_types().unwrap()
+            types: to_cpp::init_types().unwrap(),
         }
     }
 }
@@ -128,7 +128,6 @@ impl ASTVisitor<'_> for ASTEvaluator {
         self.add_whitespace();
         self.visit_expression(&let_statement.initializer);
         self.add_text(";");
-
     }
 
     fn visit_statement(&mut self, statement: &ASTStatement) {
