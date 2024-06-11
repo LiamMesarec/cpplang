@@ -17,7 +17,6 @@ pub fn init_types() -> Result<HashMap<String, TypeInfo>, Box<dyn Error>> {
 
     for result in rdr.records() {
         let record = result?;
-        println!("{:?}", record);
         let key = record[0].to_string();
         let type_info = TypeInfo {
             name: record[1].to_string(),

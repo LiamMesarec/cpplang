@@ -1,9 +1,12 @@
 use crate::parser::visitor::ASTVisitor;
 use crate::parser::*;
+use crate::evaluator::to_cpp;
+use std::collections::HashMap;
 
 pub struct ASTEvaluator {
     indent: usize,
     pub result: String,
+    types: HashMap<String, to_cpp::TypeInfo>,
 }
 
 impl ASTEvaluator {
@@ -31,6 +34,7 @@ impl ASTEvaluator {
         Self {
             indent: 0,
             result: String::new(),
+            types: to_cpp::init_types().unwrap()
         }
     }
 }
@@ -103,13 +107,28 @@ impl ASTVisitor<'_> for ASTEvaluator {
     }
 
     fn visit_let_statement(&mut self, let_statement: &ASTLetStatement) {
-        self.add_keyword("let");
+        if !let_statement.is_mut {
+            self.add_text("const");
+            self.add_whitespace();
+        }
+
+        if let Some(t) = &let_statement.type_annotation {
+            if let Some(cpp_t) = to_cpp::translate_type(&t, &self.types) {
+                self.add_text(&cpp_t);
+            }
+            // else unknown type
+        } else {
+            self.add_text("auto");
+        }
         self.add_whitespace();
+
         self.add_text(let_statement.identifier.lexeme.as_str());
         self.add_whitespace();
         self.add_text("=");
         self.add_whitespace();
         self.visit_expression(&let_statement.initializer);
+        self.add_text(";");
+
     }
 
     fn visit_statement(&mut self, statement: &ASTStatement) {
@@ -127,6 +146,7 @@ impl ASTVisitor<'_> for ASTEvaluator {
             self.visit_expression(argument);
         }
         self.add_text(")");
+        self.add_text(";");
     }
 
     fn visit_assignment_expression(&mut self, assignment_expression: &ASTAssignmentExpression) {
