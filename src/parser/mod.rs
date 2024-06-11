@@ -63,15 +63,17 @@ pub struct ASTReturnStatement {
     pub return_keyword: TokenInfo,
     pub return_value: Option<ASTExpression>,
 }
-
 #[derive(Debug, Clone)]
 pub struct FuncDeclParameter {
     pub identifier: TokenInfo,
+    pub type_annotation: Option<TokenInfo>,
 }
+
 #[derive(Debug, Clone)]
 pub struct ASTFuncDeclStatement {
     pub identifier: TokenInfo,
     pub parameters: Vec<FuncDeclParameter>,
+    pub type_annotation: Option<TokenInfo>,
     pub body: Box<ASTStatement>,
 }
 #[derive(Debug, Clone)]
@@ -142,7 +144,7 @@ pub struct ASTLetStatement {
 
 #[derive(Debug, Clone)]
 pub struct ASTStatement {
-    kind: ASTStatementKind,
+    pub kind: ASTStatementKind,
 }
 
 impl ASTStatement {
@@ -224,11 +226,13 @@ impl ASTStatement {
     pub fn func_decl_statement(
         identifier: TokenInfo,
         parameters: Vec<FuncDeclParameter>,
+        type_annotation: Option<TokenInfo>,
         body: ASTStatement,
     ) -> Self {
         ASTStatement::new(ASTStatementKind::FuncDecl(ASTFuncDeclStatement {
             identifier,
             parameters,
+            type_annotation,
             body: Box::new(body),
         }))
     }
@@ -244,6 +248,15 @@ pub enum ASTExpressionKind {
     Assignment(ASTAssignmentExpression),
     Boolean(ASTBooleanExpression),
     Call(ASTCallExpression),
+    Range(ASTRangeExpression),
+    Array(ASTArrayExpression),
+    ArrayIndex(ASTArrayIndexExpression),
+}
+
+#[derive(Debug, Clone)]
+pub struct ASTRangeExpression {
+    pub start: Box<ASTExpression>,
+    pub end: Box<ASTExpression>,
 }
 
 #[derive(Debug, Clone)]
@@ -285,10 +298,20 @@ pub struct ASTUnaryExpression {
 }
 
 #[derive(Debug, Clone)]
+pub struct ASTArrayExpression {
+    pub elements: Vec<ASTExpression>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ASTArrayIndexExpression {
+    pub array: Box<ASTExpression>,
+    pub index: Box<ASTExpression>,
+}
+
+#[derive(Debug, Clone)]
 pub struct ASTVariableExpression {
     pub identifier: TokenInfo,
 }
-
 impl ASTVariableExpression {
     pub fn identifier(&self) -> &str {
         &self.identifier.lexeme
@@ -367,6 +390,12 @@ impl ASTExpression {
     pub fn new(kind: ASTExpressionKind) -> Self {
         ASTExpression { kind }
     }
+
+    pub fn range(start: Box<ASTExpression>, end: Box<ASTExpression>) -> Self {
+        Self {
+            kind: ASTExpressionKind::Range(ASTRangeExpression { start, end }),
+        }
+    }
     pub fn number(num: TokenInfo) -> Self {
         ASTExpression::new(ASTExpressionKind::Number(ASTNumberExpression { num }))
     }
@@ -415,5 +444,17 @@ impl ASTExpression {
             identifier,
             arguments,
         }))
+    }
+
+    pub fn array(elements: Vec<ASTExpression>) -> Self {
+        ASTExpression {
+            kind: ASTExpressionKind::Array(ASTArrayExpression { elements }),
+        }
+    }
+
+    pub fn array_index(array: Box<ASTExpression>, index: Box<ASTExpression>) -> Self {
+        ASTExpression {
+            kind: ASTExpressionKind::ArrayIndex(ASTArrayIndexExpression { array, index }),
+        }
     }
 }

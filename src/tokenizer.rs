@@ -68,6 +68,8 @@ pub enum Token {
     Int,
     LeftParantheses,
     RightParantheses,
+    LeftSquareBracket,
+    RightSquareBracket,
     LeftBraces,
     RightBraces,
     Assignment,
@@ -368,6 +370,8 @@ fn create_transitions_table(alphabet_len: usize, num_states: usize) -> Vec<Vec<T
     set_transition(Token::None, ')', Token::RightParantheses);
     set_transition(Token::None, '{', Token::LeftBraces);
     set_transition(Token::None, '}', Token::RightBraces);
+    set_transition(Token::None, '[', Token::LeftSquareBracket);
+    set_transition(Token::None, ']', Token::RightSquareBracket);
 
     set_transition(Token::None, '.', Token::Dot);
     set_transition(Token::Dot, '.', Token::Range);

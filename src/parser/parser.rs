@@ -2,8 +2,9 @@ use crate::tokenizer::{Token, TokenInfo};
 use ptree::{Style, TreeItem};
 
 use crate::parser::{
-    ASTBinaryOperator, ASTBinaryOperatorKind, ASTElseStatement, ASTExpression, ASTStatement,
-    ASTUnaryExpression, ASTUnaryOperator, ASTUnaryOperatorKind, Ast, FuncDeclParameter,
+    ASTArrayExpression, ASTArrayIndexExpression, ASTBinaryOperator, ASTBinaryOperatorKind,
+    ASTElseStatement, ASTExpression, ASTStatement, ASTUnaryExpression, ASTUnaryOperator,
+    ASTUnaryOperatorKind, Ast, FuncDeclParameter,
 };
 use std::borrow::Cow;
 use std::cell::Cell;
@@ -68,8 +69,14 @@ impl Node {
         self.consume_and_check(Token::Fn);
         let identifier = self.consume_and_check(Token::Identifier).clone();
         let parameters = self.parse_optional_parameter_list();
+        let return_type = if self.peek(0).token == Token::Colon {
+            self.consume_and_check(Token::Colon);
+            Some(self.consume_and_check(Token::Identifier).clone())
+        } else {
+            None
+        };
         let body = self.parse_statement();
-        ASTStatement::func_decl_statement(identifier, parameters, body)
+        ASTStatement::func_decl_statement(identifier, parameters, return_type, body)
     }
 
     fn parse_optional_parameter_list(&mut self) -> Vec<FuncDeclParameter> {
@@ -79,8 +86,16 @@ impl Node {
         self.consume_and_check(Token::LeftParantheses);
         let mut parameters = Vec::new();
         while self.current().token != Token::RightParantheses && !self.is_at_end() {
+            let identifier = self.consume_and_check(Token::Identifier).clone();
+            let type_annotation = if self.peek(0).token == Token::Colon {
+                self.consume_and_check(Token::Colon);
+                Some(self.consume_and_check(Token::Identifier).clone())
+            } else {
+                None
+            };
             parameters.push(FuncDeclParameter {
-                identifier: self.consume_and_check(Token::Identifier).clone(),
+                identifier,
+                type_annotation,
             });
             if self.current().token == Token::Comma {
                 self.consume_and_check(Token::Comma);
@@ -89,7 +104,6 @@ impl Node {
         self.consume_and_check(Token::RightParantheses);
         parameters
     }
-
     fn parse_while_statement(&mut self) -> ASTStatement {
         let while_keyword = self.consume_and_check(Token::While).clone();
         let condition_expr = self.parse_expression();
@@ -101,9 +115,20 @@ impl Node {
         let for_keyword = self.consume_and_check(Token::For).clone();
         let identifier = self.consume_and_check(Token::Identifier).clone();
         self.consume_and_check(Token::In);
+
         let iterable = self.parse_expression();
+
+        //print!("{:?}", iterable.kind);
         let body = self.parse_statement();
         ASTStatement::for_statement(for_keyword, identifier, iterable, body)
+    }
+
+    fn parse_range_expression(&mut self) -> ASTExpression {
+        let start = self.parse_assignment_expression();
+
+        self.consume_and_check(Token::Range);
+        let end = self.parse_assignment_expression();
+        ASTExpression::range(Box::new(start), Box::new(end))
     }
 
     fn parse_block_statement(&mut self) -> ASTStatement {
@@ -164,21 +189,31 @@ impl Node {
     }
 
     fn parse_expression(&mut self) -> ASTExpression {
+        if self.peek(1).token == Token::Range {
+            //TODO at some point bo to zgličal
+            return self.parse_range_expression();
+        }
         self.parse_assignment_expression()
     }
 
     fn parse_assignment_expression(&mut self) -> ASTExpression {
         if self.current().token == Token::Identifier {
-            if self.peek(1).token == Token::Assignment {
+            if self.peek(1).token == Token::LeftSquareBracket {
+                let identifier = self.consume_and_check(Token::Identifier).clone();
+                let array = ASTExpression::identifier(identifier.clone());
+                let array_index = self.parse_array_index_expression(array);
+                self.consume_and_check(Token::Assignment);
+                let expr = self.parse_expression();
+                return ASTExpression::assignment(identifier, array_index);
+            } else if self.peek(1).token == Token::Assignment {
                 let identifier = self.consume_and_check(Token::Identifier).clone();
                 self.consume_and_check(Token::Assignment);
                 let expr = self.parse_expression();
                 return ASTExpression::assignment(identifier, expr);
             }
         }
-        return self.parse_binary_expression(0);
+        self.parse_binary_expression(0)
     }
-
     fn parse_binary_expression(&mut self, precedence: u8) -> ASTExpression {
         let mut left = self.parse_unary_expression();
         while let Some(operator) = self.parse_binary_operator() {
@@ -210,6 +245,26 @@ impl Node {
         return kind.map(|kind| ASTUnaryOperator::new(kind, token.clone()));
     }
 
+    fn parse_array_expression(&mut self) -> ASTExpression {
+        self.consume_and_check(Token::LeftSquareBracket);
+        let mut elements = Vec::new();
+        while self.current().token != Token::RightSquareBracket && !self.is_at_end() {
+            elements.push(self.parse_expression());
+            if self.current().token != Token::RightSquareBracket {
+                self.consume_and_check(Token::Comma);
+            }
+        }
+        self.consume_and_check(Token::RightSquareBracket);
+        ASTExpression::array(elements)
+    }
+
+    fn parse_array_index_expression(&mut self, array: ASTExpression) -> ASTExpression {
+        self.consume_and_check(Token::LeftSquareBracket);
+        let index = self.parse_expression();
+        self.consume_and_check(Token::RightSquareBracket);
+        ASTExpression::array_index(Box::new(array), Box::new(index))
+    }
+
     fn parse_binary_operator(&mut self) -> Option<ASTBinaryOperator> {
         let token = self.current();
         let kind = match token.token {
@@ -230,25 +285,34 @@ impl Node {
         };
         return kind.map(|kind| ASTBinaryOperator::new(kind, token.clone()));
     }
+
     fn parse_primary_expression(&mut self) -> ASTExpression {
-        let token = self.consume();
-        return match token.token {
-            Token::Number => ASTExpression::number(token.clone()),
+        let token = self.consume().clone();
+        match token.token {
+            Token::Number => ASTExpression::number(token),
             Token::LeftParantheses => {
                 let expr = self.parse_expression();
                 self.consume_and_check(Token::RightParantheses);
                 ASTExpression::parenthesized(expr)
             }
+            Token::LeftSquareBracket => {
+                let array_expr = ASTExpression::identifier(token.clone());
+                self.parse_array_index_expression(array_expr)
+            }
             Token::Identifier => {
                 if self.current().token == Token::LeftParantheses {
-                    self.parse_call_expression(token.clone())
+                    self.parse_call_expression(token)
+                } else if self.current().token == Token::LeftSquareBracket {
+                    let array_expr = ASTExpression::identifier(token);
+                    self.parse_array_index_expression(array_expr)
                 } else {
-                    ASTExpression::identifier(token.clone())
+                    ASTExpression::identifier(token)
                 }
             }
             _ => panic!("Unexpected token: {:?}", token),
-        };
+        }
     }
+
     fn parse_call_expression(&mut self, identifier: TokenInfo) -> ASTExpression {
         self.consume_and_check(Token::LeftParantheses);
         let mut arguments = Vec::new();
@@ -281,7 +345,7 @@ impl Node {
     fn consume_and_check(&self, kind: Token) -> &TokenInfo {
         let token = self.consume();
         if token.token != kind {
-            println!("{} Error", token.lexeme);
+            panic!("Expected token: {:?}, found: {:?}", kind, token.token);
         }
         token
     }

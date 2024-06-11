@@ -1,9 +1,9 @@
 use crate::parser::{
-    ASTAssignmentExpression, ASTBinaryExpression, ASTBlockStatement, ASTBooleanExpression,
-    ASTCallExpression, ASTExpression, ASTExpressionKind, ASTForStatement, ASTFuncDeclStatement,
-    ASTIfStatement, ASTLetStatement, ASTNumberExpression, ASTParenthesizedExpression,
-    ASTReturnStatement, ASTStatement, ASTStatementKind, ASTUnaryExpression, ASTVariableExpression,
-    ASTWhileStatement,
+    ASTArrayExpression, ASTArrayIndexExpression, ASTAssignmentExpression, ASTBinaryExpression,
+    ASTBlockStatement, ASTBooleanExpression, ASTCallExpression, ASTExpression, ASTExpressionKind,
+    ASTForStatement, ASTFuncDeclStatement, ASTIfStatement, ASTLetStatement, ASTNumberExpression,
+    ASTParenthesizedExpression, ASTRangeExpression, ASTReturnStatement, ASTStatement,
+    ASTStatementKind, ASTUnaryExpression, ASTVariableExpression, ASTWhileStatement,
 };
 
 pub trait ASTVisitor<'a> {
@@ -68,6 +68,7 @@ pub trait ASTVisitor<'a> {
             self.visit_statement(&else_branch.else_statement);
         }
     }
+
     fn visit_let_statement(&mut self, let_statement: &ASTLetStatement);
     fn visit_statement(&mut self, statement: &ASTStatement) {
         self.do_visit_statement(statement);
@@ -101,6 +102,15 @@ pub trait ASTVisitor<'a> {
             ASTExpressionKind::Call(expr) => {
                 self.visit_call_expression(expr);
             }
+            ASTExpressionKind::Range(expr) => {
+                self.visit_range_expression(expr);
+            }
+            ASTExpressionKind::Array(expr) => {
+                self.visit_array_expression(expr);
+            }
+            ASTExpressionKind::ArrayIndex(expr) => {
+                self.visit_array_index_expression(expr);
+            }
         }
     }
     fn visit_call_expression(&mut self, call_expression: &ASTCallExpression) {
@@ -114,6 +124,11 @@ pub trait ASTVisitor<'a> {
 
     fn visit_assignment_expression(&mut self, assignment_expression: &ASTAssignmentExpression) {
         self.visit_expression(&assignment_expression.expression);
+    }
+
+    fn visit_range_expression(&mut self, range_expression: &ASTRangeExpression) {
+        self.visit_expression(&range_expression.start);
+        self.visit_expression(&range_expression.end);
     }
 
     fn visit_variable_expression(&mut self, variable_expression: &ASTVariableExpression);
@@ -133,5 +148,16 @@ pub trait ASTVisitor<'a> {
         parenthesized_expression: &ASTParenthesizedExpression,
     ) {
         self.visit_expression(&parenthesized_expression.expression);
+    }
+
+    fn visit_array_expression(&mut self, array_expression: &ASTArrayExpression) {
+        for element in &array_expression.elements {
+            self.visit_expression(element);
+        }
+    }
+
+    fn visit_array_index_expression(&mut self, array_index_expression: &ASTArrayIndexExpression) {
+        self.visit_expression(&array_index_expression.array);
+        self.visit_expression(&array_index_expression.index);
     }
 }
