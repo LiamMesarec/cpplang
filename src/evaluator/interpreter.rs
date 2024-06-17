@@ -2,12 +2,12 @@ use crate::parser::visitor::ASTVisitor;
 use crate::parser::*;
 use std::collections::HashMap;
 
-pub struct ASTEvaluatorLang {
+pub struct ASTInterpreter {
     pub last_value: Option<i64>,
     pub variables: HashMap<String, i64>,
 }
 
-impl ASTEvaluatorLang {
+impl ASTInterpreter {
     pub fn new() -> Self {
         Self {
             last_value: None,
@@ -16,7 +16,7 @@ impl ASTEvaluatorLang {
     }
 }
 
-impl ASTVisitor<'_> for ASTEvaluatorLang {
+impl ASTVisitor<'_> for ASTInterpreter {
     fn visit_statement(&mut self, statement: &ASTStatement) {
         match &statement.kind {
             ASTStatementKind::Let(let_statement) => self.visit_let_statement(let_statement),
@@ -40,6 +40,7 @@ impl ASTVisitor<'_> for ASTEvaluatorLang {
                 self.visit_variable_expression(variable_expr)
             }
             ASTExpressionKind::Number(number_expr) => self.visit_number_expression(number_expr),
+            ASTExpressionKind::String(string_expr) => self.visit_string_expression(string_expr),
             ASTExpressionKind::Unary(unary_expr) => self.visit_unary_expression(unary_expr),
             ASTExpressionKind::Binary(binary_expr) => self.visit_binary_expression(binary_expr),
             ASTExpressionKind::Parenthesized(paren_expr) => {
@@ -73,6 +74,14 @@ impl ASTVisitor<'_> for ASTEvaluatorLang {
 
     fn visit_number_expression(&mut self, number_expr: &ASTNumberExpression) {
         match number_expr.num.lexeme.parse::<i64>() {
+            Ok(n) => self.last_value = Some(n),
+            Err(e) => println!("Error: {}", e),
+        }
+    }
+
+    //string ne dela, to je placeholder
+    fn visit_string_expression(&mut self, string_expr: &ASTStringExpression) {
+        match string_expr.token.lexeme.parse::<i64>() {
             Ok(n) => self.last_value = Some(n),
             Err(e) => println!("Error: {}", e),
         }

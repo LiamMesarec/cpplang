@@ -54,6 +54,11 @@ project({} VERSION 0.1
                   DESCRIPTION ""
                   LANGUAGES CXX)
 
+
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 add_executable(${{CMAKE_PROJECT_NAME}} main.cpp)
 "#, name).as_bytes()
                     ) {
@@ -113,12 +118,19 @@ name = "{}"
                 println!("Failed to create file: {}", error);
             }
         }
+        let src_fn = std::path::Path::new("functions.csv");
+        let mut dst_fn = PathBuf::new();
+        dst_fn.push(name);
+        dst_fn.push("functions.csv");
+        fs::copy(&src_fn, &dst_fn).unwrap();
 
         let src = std::path::Path::new("types.csv");
         let mut dst = PathBuf::new();
         dst.push(name);
         dst.push("types.csv");
         fs::copy(&src, &dst).unwrap();
+
+
     }
 
     fn build() {
@@ -143,7 +155,7 @@ name = "{}"
                     match tokenizer::tokenize(reader) {
                         Ok(tokens) => match parser::parse(tokens) {
                             Some(ast) => {
-                                let output = evaluator::evaluate(&ast);
+                                let output = evaluator::cpptranspile(&ast);
                                 let file_name = file.file_name().unwrap().to_str().unwrap();
                                 let new_file_path = format!("./cpp/{}.cpp", file_name.trim_end_matches(".cpp2"));
                                 match std::fs::File::create(&new_file_path) {

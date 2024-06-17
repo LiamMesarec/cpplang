@@ -4,7 +4,7 @@ use ptree::{Style, TreeItem};
 use crate::parser::{
     ASTArrayExpression, ASTArrayIndexExpression, ASTBinaryOperator, ASTBinaryOperatorKind,
     ASTElseStatement, ASTExpression, ASTStatement, ASTUnaryExpression, ASTUnaryOperator,
-    ASTUnaryOperatorKind, Ast, FuncDeclParameter,
+    ASTUnaryOperatorKind, Ast, FuncDeclParameter, ASTReturnStatement
 };
 use std::borrow::Cow;
 use std::cell::Cell;
@@ -61,8 +61,15 @@ impl Node {
             Token::While => self.parse_while_statement(),
             Token::Fn => self.parse_function_declaration(),
             Token::For => self.parse_for_statement(),
+            Token::Return => self.parse_return_statement(),
             _ => self.parse_expression_statement(),
         }
+    }
+
+    fn parse_return_statement(&mut self) -> ASTStatement {
+        let keyword = self.consume_and_check(Token::Return).clone();
+        let value = self.parse_expression();
+        ASTStatement::return_statement(keyword, Some(value))
     }
 
     fn parse_function_declaration(&mut self) -> ASTStatement {
@@ -183,6 +190,7 @@ impl Node {
 
         return ASTStatement::let_statement(identifier, type_annotation, is_mut, expr);
     }
+
     fn parse_expression_statement(&mut self) -> ASTStatement {
         let expr = self.parse_expression();
         return ASTStatement::expression(expr);
@@ -192,6 +200,16 @@ impl Node {
         if self.peek(1).token == Token::Range {
             //TODO at some point bo to zgličal
             return self.parse_range_expression();
+        }
+        if self.peek(0).token == Token::Std {
+            let keyword = self.current().clone();
+            self.consume_and_check(Token::Std);
+            let double_colon = self.current().clone();
+            self.consume_and_check(Token::DoubleColon);
+            let identifier = self.current().clone();
+            self.consume_and_check(Token::Identifier);
+
+            return self.parse_std_call_expression(keyword, double_colon, identifier);
         }
         self.parse_assignment_expression()
     }
@@ -289,6 +307,7 @@ impl Node {
     fn parse_primary_expression(&mut self) -> ASTExpression {
         let token = self.consume().clone();
         match token.token {
+            Token::String => ASTExpression::string(token),
             Token::Number => ASTExpression::number(token),
             Token::LeftParantheses => {
                 let expr = self.parse_expression();
@@ -324,6 +343,19 @@ impl Node {
         }
         self.consume_and_check(Token::RightParantheses);
         return ASTExpression::call(identifier.clone(), arguments);
+    }
+
+    fn parse_std_call_expression(&mut self, std_keyword: TokenInfo, double_colon: TokenInfo, identifier: TokenInfo) -> ASTExpression {
+        self.consume_and_check(Token::LeftParantheses);
+        let mut arguments = Vec::new();
+        while self.current().token != Token::RightParantheses && !self.is_at_end() {
+            arguments.push(self.parse_expression());
+            if self.current().token != Token::RightParantheses {
+                self.consume_and_check(Token::Comma);
+            }
+        }
+        self.consume_and_check(Token::RightParantheses);
+        return ASTExpression::std_call(std_keyword, double_colon, identifier, arguments);
     }
 
     fn peek(&self, offset: isize) -> &TokenInfo {

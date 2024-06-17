@@ -92,6 +92,14 @@ pub struct ASTForStatement {
     pub body: Box<ASTStatement>,
 }
 
+#[derive(Debug, Clone)]
+pub struct ASTStdCallExpression {
+    pub std_keyword: TokenInfo,
+    pub double_colon: TokenInfo,
+    pub identifier: TokenInfo,
+    pub arguments: Vec<ASTExpression>,
+}
+
 impl ASTForStatement {
     pub fn new(
         for_keyword: TokenInfo,
@@ -242,6 +250,7 @@ impl ASTStatement {
 #[derive(Debug, Clone)]
 pub enum ASTExpressionKind {
     Number(ASTNumberExpression),
+    String(ASTStringExpression),
     Binary(ASTBinaryExpression),
     Unary(ASTUnaryExpression),
     Parenthesized(ASTParenthesizedExpression),
@@ -249,6 +258,7 @@ pub enum ASTExpressionKind {
     Assignment(ASTAssignmentExpression),
     Boolean(ASTBooleanExpression),
     Call(ASTCallExpression),
+    StdCall(ASTStdCallExpression),
     Range(ASTRangeExpression),
     Array(ASTArrayExpression),
     ArrayIndex(ASTArrayIndexExpression),
@@ -378,6 +388,11 @@ pub struct ASTNumberExpression {
 }
 
 #[derive(Debug, Clone)]
+pub struct ASTStringExpression {
+    pub token: TokenInfo,
+}
+
+#[derive(Debug, Clone)]
 pub struct ASTParenthesizedExpression {
     pub expression: Box<ASTExpression>,
 }
@@ -440,8 +455,23 @@ impl ASTExpression {
         }))
     }
 
+    pub fn string(token: TokenInfo) -> Self {
+        ASTExpression::new(ASTExpressionKind::String(ASTStringExpression {
+            token
+        }))
+    }
+
     pub fn call(identifier: TokenInfo, arguments: Vec<ASTExpression>) -> Self {
         ASTExpression::new(ASTExpressionKind::Call(ASTCallExpression {
+            identifier,
+            arguments,
+        }))
+    }
+
+    pub fn std_call(std_keyword: TokenInfo, double_colon: TokenInfo, identifier: TokenInfo, arguments: Vec<ASTExpression>) -> Self {
+        ASTExpression::new(ASTExpressionKind::StdCall(ASTStdCallExpression {
+            std_keyword,
+            double_colon,
             identifier,
             arguments,
         }))

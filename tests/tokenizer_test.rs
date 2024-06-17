@@ -69,6 +69,7 @@ fn bitwise() {
         ]
     ));
 }
+
 #[test]
 fn logic_operators() {
     assert!(tokenize_and_compare(
@@ -508,3 +509,33 @@ fn functions() {
         ]
     ));
 }
+
+#[test]
+fn namespaces() {
+    assert!(tokenize_and_compare(
+        "std::whilep",
+        &[
+            TokenInfo {
+                token: Token::Std,
+                lexeme: String::from("std"),
+                start_position: Position { row: 1, col: 1 }
+            },
+            TokenInfo {
+                token: Token::DoubleColon,
+                lexeme: String::from("::"),
+                start_position: Position { row: 1, col: 4 }
+            },
+            TokenInfo {
+                token: Token::Identifier,
+                lexeme: String::from("whilep"),
+                start_position: Position { row: 1, col: 6 }
+            },
+            TokenInfo {
+                token: Token::EOF,
+                lexeme: String::from(""),
+                start_position: Position { row: 1, col: 12 }
+            }
+        ]
+    ));
+}
+

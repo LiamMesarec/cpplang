@@ -3,7 +3,7 @@ use crate::parser::{
     ASTBlockStatement, ASTBooleanExpression, ASTCallExpression, ASTExpression, ASTExpressionKind,
     ASTForStatement, ASTFuncDeclStatement, ASTIfStatement, ASTLetStatement, ASTNumberExpression,
     ASTParenthesizedExpression, ASTRangeExpression, ASTReturnStatement, ASTStatement,
-    ASTStatementKind, ASTUnaryExpression, ASTVariableExpression, ASTWhileStatement,
+    ASTStatementKind, ASTUnaryExpression, ASTVariableExpression, ASTWhileStatement, ASTStdCallExpression, ASTStringExpression
 };
 
 pub trait ASTVisitor<'a> {
@@ -78,6 +78,9 @@ pub trait ASTVisitor<'a> {
             ASTExpressionKind::Number(number) => {
                 self.visit_number_expression(number);
             }
+            ASTExpressionKind::String(string) => {
+                self.visit_string_expression(string);
+            }
             ASTExpressionKind::Binary(expr) => {
                 self.visit_binary_expression(expr);
             }
@@ -102,6 +105,9 @@ pub trait ASTVisitor<'a> {
             ASTExpressionKind::Call(expr) => {
                 self.visit_call_expression(expr);
             }
+            ASTExpressionKind::StdCall(expr) => {
+                self.visit_std_call_expression(expr);
+            }
             ASTExpressionKind::Range(expr) => {
                 self.visit_range_expression(expr);
             }
@@ -115,6 +121,12 @@ pub trait ASTVisitor<'a> {
     }
     fn visit_call_expression(&mut self, call_expression: &ASTCallExpression) {
         for argument in &call_expression.arguments {
+            self.visit_expression(argument);
+        }
+    }
+
+    fn visit_std_call_expression(&mut self, std_call_expression: &ASTStdCallExpression) {
+        for argument in &std_call_expression.arguments {
             self.visit_expression(argument);
         }
     }
@@ -134,6 +146,8 @@ pub trait ASTVisitor<'a> {
     fn visit_variable_expression(&mut self, variable_expression: &ASTVariableExpression);
 
     fn visit_number_expression(&mut self, number: &ASTNumberExpression);
+
+    fn visit_string_expression(&mut self, string: &ASTStringExpression);
 
     fn visit_boolean_expression(&mut self, boolean: &ASTBooleanExpression);
 

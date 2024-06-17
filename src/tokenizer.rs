@@ -36,7 +36,9 @@ pub enum Token {
 
     EOF, //don't move EOF
     Identifier,
+    Std,
     Colon,
+    DoubleColon,
     Comma,
     Number,
     Star,
@@ -272,6 +274,7 @@ fn assign_if_reserved_identifier(token_info: &TokenInfo) -> Token {
         "interpret" => Token::Interpret,
         "match" => Token::Match,
         "struct" => Token::Struct,
+        "std" => Token::Std,
         _ => token_info.token,
     }
 }
@@ -311,6 +314,7 @@ fn create_transitions_table(alphabet_len: usize, num_states: usize) -> Vec<Vec<T
     set_transition(Token::None, ',', Token::Comma);
 
     set_transition(Token::None, ':', Token::Colon);
+    set_transition(Token::Colon, ':', Token::DoubleColon);
     set_transition(Token::Assignment, '=', Token::Equals);
 
     set_transition(Token::None, '<', Token::LowerThan);

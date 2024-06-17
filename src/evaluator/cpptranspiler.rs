@@ -3,13 +3,14 @@ use crate::parser::visitor::ASTVisitor;
 use crate::parser::*;
 use std::collections::HashMap;
 
-pub struct ASTEvaluator {
+pub struct ASTCppTranspiler {
     pub result: String,
     types: HashMap<String, to_cpp::TypeInfo>,
+    std_names: HashMap<String, String>,
     includes: Vec<String>
 }
 
-impl ASTEvaluator {
+impl ASTCppTranspiler {
     fn add_whitespace(&mut self) {
         self.result.push_str(" ");
     }
@@ -34,12 +35,13 @@ impl ASTEvaluator {
         Self {
             result: String::new(),
             types: to_cpp::init_types().unwrap(),
+            std_names: to_cpp::init_std_names().unwrap(),
             includes: Vec::new()
         }
     }
 }
 
-impl ASTVisitor<'_> for ASTEvaluator {
+impl ASTVisitor<'_> for ASTCppTranspiler {
     fn visit_func_decl_statement(&mut self, func_decl_statement: &ASTFuncDeclStatement) {
         if let Some(t) = &func_decl_statement.type_annotation {
             if let Some(cpp_t) = to_cpp::translate_type(&t, &self.types) {
@@ -88,7 +90,6 @@ impl ASTVisitor<'_> for ASTEvaluator {
         self.add_text(":");
         //tu je array
         self.visit_statement(&for_statement.body);
-
     }
     fn visit_return_statement(&mut self, return_statement: &ASTReturnStatement) {
         self.add_keyword("return");
@@ -167,6 +168,32 @@ impl ASTVisitor<'_> for ASTEvaluator {
         Self::do_visit_statement(self, statement);
     }
 
+    fn visit_std_call_expression(&mut self, std_call_expression: &ASTStdCallExpression) {
+        let fn_name = format!("{}{}{}", &std_call_expression.std_keyword.lexeme, &std_call_expression.double_colon.lexeme,&std_call_expression.identifier.lexeme);
+
+        if let Some(library) = to_cpp::get_library(&fn_name, &self.std_names) {
+            self.add_text(&fn_name);
+
+            if !self.includes.contains(&library) {
+                self.includes.push(library);
+            }
+        }
+        else {
+            self.add_text(&fn_name); //unknown std function error
+        }
+
+        self.add_text("(");
+        for (i, argument) in std_call_expression.arguments.iter().enumerate() {
+            if i != 0 {
+                self.add_text(",");
+                self.add_whitespace();
+            }
+            self.visit_expression(argument);
+        }
+        self.add_text(")");
+        self.add_text(";");
+    }
+
     fn visit_call_expression(&mut self, call_expression: &ASTCallExpression) {
         self.add_text(&call_expression.identifier.lexeme);
         self.add_text("(");
@@ -197,6 +224,10 @@ impl ASTVisitor<'_> for ASTEvaluator {
 
     fn visit_number_expression(&mut self, number: &ASTNumberExpression) {
         self.result.push_str(&format!("{}", number.num.lexeme,));
+    }
+
+    fn visit_string_expression(&mut self, string: &ASTStringExpression) {
+        self.result.push_str(&format!("{}", string.token.lexeme,));
     }
 
     fn visit_boolean_expression(&mut self, boolean: &ASTBooleanExpression) {
