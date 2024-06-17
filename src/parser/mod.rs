@@ -456,9 +456,7 @@ impl ASTExpression {
     }
 
     pub fn string(token: TokenInfo) -> Self {
-        ASTExpression::new(ASTExpressionKind::String(ASTStringExpression {
-            token
-        }))
+        ASTExpression::new(ASTExpressionKind::String(ASTStringExpression { token }))
     }
 
     pub fn call(identifier: TokenInfo, arguments: Vec<ASTExpression>) -> Self {
@@ -468,7 +466,12 @@ impl ASTExpression {
         }))
     }
 
-    pub fn std_call(std_keyword: TokenInfo, double_colon: TokenInfo, identifier: TokenInfo, arguments: Vec<ASTExpression>) -> Self {
+    pub fn std_call(
+        std_keyword: TokenInfo,
+        double_colon: TokenInfo,
+        identifier: TokenInfo,
+        arguments: Vec<ASTExpression>,
+    ) -> Self {
         ASTExpression::new(ASTExpressionKind::StdCall(ASTStdCallExpression {
             std_keyword,
             double_colon,

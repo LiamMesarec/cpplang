@@ -1,0 +1,27 @@
+
+fn main(): i32 {
+    let mut a : i32 = 3
+    let mut b : i32 = 1
+    let mut c : i32 = 2
+
+    if a > b {
+        let temp : i32 = a
+        a = b
+        b = temp
+    }
+
+    if b > c {
+        let temp : i32 = b
+        b = c
+        c = temp
+    }
+
+    if a > b {
+        let temp : i32 = a
+        a = b
+        b = temp
+    }
+
+    std::println("Sorted order: {}, {}, {}", a, b, c)
+
+}

@@ -3,8 +3,8 @@ use ptree::{Style, TreeItem};
 
 use crate::parser::{
     ASTArrayExpression, ASTArrayIndexExpression, ASTBinaryOperator, ASTBinaryOperatorKind,
-    ASTElseStatement, ASTExpression, ASTStatement, ASTUnaryExpression, ASTUnaryOperator,
-    ASTUnaryOperatorKind, Ast, FuncDeclParameter, ASTReturnStatement
+    ASTElseStatement, ASTExpression, ASTReturnStatement, ASTStatement, ASTUnaryExpression,
+    ASTUnaryOperator, ASTUnaryOperatorKind, Ast, FuncDeclParameter,
 };
 use std::borrow::Cow;
 use std::cell::Cell;
@@ -345,7 +345,12 @@ impl Node {
         return ASTExpression::call(identifier.clone(), arguments);
     }
 
-    fn parse_std_call_expression(&mut self, std_keyword: TokenInfo, double_colon: TokenInfo, identifier: TokenInfo) -> ASTExpression {
+    fn parse_std_call_expression(
+        &mut self,
+        std_keyword: TokenInfo,
+        double_colon: TokenInfo,
+        identifier: TokenInfo,
+    ) -> ASTExpression {
         self.consume_and_check(Token::LeftParantheses);
         let mut arguments = Vec::new();
         while self.current().token != Token::RightParantheses && !self.is_at_end() {

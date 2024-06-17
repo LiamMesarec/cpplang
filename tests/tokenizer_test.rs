@@ -538,4 +538,3 @@ fn namespaces() {
         ]
     ));
 }
-

@@ -28,7 +28,10 @@ pub fn init_types() -> Result<HashMap<String, TypeInfo>, Box<dyn Error>> {
     Ok(hashmap)
 }
 
-pub fn translate_type(token_info: &TokenInfo, types: &HashMap<String, TypeInfo>) -> Option<TypeInfo> {
+pub fn translate_type(
+    token_info: &TokenInfo,
+    types: &HashMap<String, TypeInfo>,
+) -> Option<TypeInfo> {
     if token_info.token != Token::Identifier {
         return None;
     }

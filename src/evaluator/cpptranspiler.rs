@@ -7,7 +7,7 @@ pub struct ASTCppTranspiler {
     pub result: String,
     types: HashMap<String, to_cpp::TypeInfo>,
     std_names: HashMap<String, String>,
-    includes: Vec<String>
+    includes: Vec<String>,
 }
 
 impl ASTCppTranspiler {
@@ -36,7 +36,7 @@ impl ASTCppTranspiler {
             result: String::new(),
             types: to_cpp::init_types().unwrap(),
             std_names: to_cpp::init_std_names().unwrap(),
-            includes: Vec::new()
+            includes: Vec::new(),
         }
     }
 }
@@ -50,10 +50,9 @@ impl ASTVisitor<'_> for ASTCppTranspiler {
                 if !self.includes.contains(&cpp_t.library) {
                     self.includes.push(cpp_t.library);
                 }
+            } else {
+                self.add_text(&t.lexeme);
             }
-           else {
-               self.add_text(&t.lexeme);
-           }
         } else {
             self.add_text("auto");
         }
@@ -148,9 +147,9 @@ impl ASTVisitor<'_> for ASTCppTranspiler {
                 if !self.includes.contains(&cpp_t.library) {
                     self.includes.push(cpp_t.library);
                 }
-            }           else {
-               self.add_text(&t.lexeme);
-           }
+            } else {
+                self.add_text(&t.lexeme);
+            }
         } else {
             self.add_text("auto");
         }
@@ -169,7 +168,12 @@ impl ASTVisitor<'_> for ASTCppTranspiler {
     }
 
     fn visit_std_call_expression(&mut self, std_call_expression: &ASTStdCallExpression) {
-        let fn_name = format!("{}{}{}", &std_call_expression.std_keyword.lexeme, &std_call_expression.double_colon.lexeme,&std_call_expression.identifier.lexeme);
+        let fn_name = format!(
+            "{}{}{}",
+            &std_call_expression.std_keyword.lexeme,
+            &std_call_expression.double_colon.lexeme,
+            &std_call_expression.identifier.lexeme
+        );
 
         if let Some(library) = to_cpp::get_library(&fn_name, &self.std_names) {
             self.add_text(&fn_name);
@@ -177,8 +181,7 @@ impl ASTVisitor<'_> for ASTCppTranspiler {
             if !self.includes.contains(&library) {
                 self.includes.push(library);
             }
-        }
-        else {
+        } else {
             self.add_text(&fn_name); //unknown std function error
         }
 
@@ -259,10 +262,11 @@ impl ASTVisitor<'_> for ASTCppTranspiler {
     }
 
     fn finalize(&mut self) {
-            let formatted_includes: Vec<String> = self.includes
-        .iter()
-        .map(|s| format!("#include <{}>\n", s))
-        .collect();
+        let formatted_includes: Vec<String> = self
+            .includes
+            .iter()
+            .map(|s| format!("#include <{}>\n", s))
+            .collect();
 
         self.result.insert_str(0, &formatted_includes.join("\n"));
     }

@@ -3,7 +3,8 @@ use crate::parser::{
     ASTBlockStatement, ASTBooleanExpression, ASTCallExpression, ASTExpression, ASTExpressionKind,
     ASTForStatement, ASTFuncDeclStatement, ASTIfStatement, ASTLetStatement, ASTNumberExpression,
     ASTParenthesizedExpression, ASTRangeExpression, ASTReturnStatement, ASTStatement,
-    ASTStatementKind, ASTUnaryExpression, ASTVariableExpression, ASTWhileStatement, ASTStdCallExpression, ASTStringExpression
+    ASTStatementKind, ASTStdCallExpression, ASTStringExpression, ASTUnaryExpression,
+    ASTVariableExpression, ASTWhileStatement,
 };
 
 pub trait ASTVisitor<'a> {

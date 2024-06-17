@@ -170,7 +170,5 @@ impl ASTVisitor<'_> for ASTInterpreter {
         self.visit_statement(&for_statement.body);
     }
 
-    fn finalize(&mut self) {
-
-    }
+    fn finalize(&mut self) {}
 }
