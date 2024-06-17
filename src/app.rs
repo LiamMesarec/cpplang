@@ -52,9 +52,8 @@ endif()
 
 set(MAXIMUM_CMAKE_VERSION "3.20")
 
-# Check if the current CMake version exceeds the maximum allowed version
-if (CMAKE_VERSION VERSION_GREATER ${MAXIMUM_CMAKE_VERSION})
-message(FATAL_ERROR "CMake version ${CMAKE_VERSION} is too new. Maximum supported version is ${MAXIMUM_CMAKE_VERSION}.")
+if (CMAKE_VERSION VERSION_GREATER ${{MAXIMUM_CMAKE_VERSION}})
+message(FATAL_ERROR "CMake version ${{CMAKE_VERSION}} is too new. Maximum supported version is {{MAXIMUM_CMAKE_VERSION}}.")
 endif()
 
 project({} VERSION 0.1
@@ -206,7 +205,7 @@ name = "{}"
     }
 
     fn run() {
-        build();
+        Self::build();
         let config_content = fs::read_to_string("config.toml").unwrap();
         let config: Config = toml::from_str(&config_content).unwrap();
         let status = std::process::Command::new(&config.cmake.path)
