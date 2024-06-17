@@ -23,6 +23,7 @@ impl Ast {
         for statement in &self.statements {
             visitor.visit_statement(statement);
         }
+        visitor.finalize();
     }
 }
 

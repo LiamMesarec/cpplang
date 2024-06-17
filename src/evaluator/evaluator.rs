@@ -4,9 +4,9 @@ use crate::parser::*;
 use std::collections::HashMap;
 
 pub struct ASTEvaluator {
-    indent: usize,
     pub result: String,
     types: HashMap<String, to_cpp::TypeInfo>,
+    includes: Vec<String>
 }
 
 impl ASTEvaluator {
@@ -32,22 +32,36 @@ impl ASTEvaluator {
 
     pub fn new() -> Self {
         Self {
-            indent: 0,
             result: String::new(),
             types: to_cpp::init_types().unwrap(),
+            includes: Vec::new()
         }
     }
 }
 
 impl ASTVisitor<'_> for ASTEvaluator {
     fn visit_func_decl_statement(&mut self, func_decl_statement: &ASTFuncDeclStatement) {
-        self.add_keyword("fn");
+        if let Some(t) = &func_decl_statement.type_annotation {
+            if let Some(cpp_t) = to_cpp::translate_type(&t, &self.types) {
+                self.add_text(&cpp_t.name);
+
+                if !self.includes.contains(&cpp_t.library) {
+                    self.includes.push(cpp_t.library);
+                }
+            }
+           else {
+               self.add_text(&t.lexeme);
+           }
+        } else {
+            self.add_text("auto");
+        }
         self.add_whitespace();
         self.add_text(&func_decl_statement.identifier.lexeme);
         let are_parameters_empty = func_decl_statement.parameters.is_empty();
         if !are_parameters_empty {
             self.add_text("(");
         } else {
+            self.add_text("()");
             self.add_whitespace();
         }
         for (i, parameter) in func_decl_statement.parameters.iter().enumerate() {
@@ -63,12 +77,26 @@ impl ASTVisitor<'_> for ASTEvaluator {
         }
         self.visit_statement(&func_decl_statement.body);
     }
+
+    fn visit_for_statement(&mut self, for_statement: &ASTForStatement) {
+        self.add_keyword("for");
+        self.add_text("(");
+        self.add_text("auto");
+        self.add_whitespace();
+        self.add_text(&for_statement.identifier.lexeme);
+        self.add_whitespace();
+        self.add_text(":");
+        //tu je array
+        self.visit_statement(&for_statement.body);
+
+    }
     fn visit_return_statement(&mut self, return_statement: &ASTReturnStatement) {
         self.add_keyword("return");
         if let Some(expression) = &return_statement.return_value {
             self.add_whitespace();
             self.visit_expression(expression);
         }
+        self.add_text(";");
     }
     fn visit_while_statement(&mut self, while_statement: &ASTWhileStatement) {
         self.add_keyword("while");
@@ -114,9 +142,14 @@ impl ASTVisitor<'_> for ASTEvaluator {
 
         if let Some(t) = &let_statement.type_annotation {
             if let Some(cpp_t) = to_cpp::translate_type(&t, &self.types) {
-                self.add_text(&cpp_t);
-            }
-            // else unknown type
+                self.add_text(&cpp_t.name);
+
+                if !self.includes.contains(&cpp_t.library) {
+                    self.includes.push(cpp_t.library);
+                }
+            }           else {
+               self.add_text(&t.lexeme);
+           }
         } else {
             self.add_text("auto");
         }
@@ -154,6 +187,7 @@ impl ASTVisitor<'_> for ASTEvaluator {
         self.add_text("=");
         self.add_whitespace();
         self.visit_expression(&assignment_expression.expression);
+        self.add_text(";");
     }
 
     fn visit_variable_expression(&mut self, variable_expression: &ASTVariableExpression) {
@@ -191,5 +225,14 @@ impl ASTVisitor<'_> for ASTEvaluator {
         self.result.push_str(&format!("{}", "(",));
         self.visit_expression(&parenthesized_expression.expression);
         self.result.push_str(&format!("{}", ")",));
+    }
+
+    fn finalize(&mut self) {
+            let formatted_includes: Vec<String> = self.includes
+        .iter()
+        .map(|s| format!("#include <{}>\n", s))
+        .collect();
+
+        self.result.insert_str(0, &formatted_includes.join("\n"));
     }
 }

@@ -160,4 +160,8 @@ impl ASTVisitor<'_> for ASTEvaluatorLang {
         println!("Body:");
         self.visit_statement(&for_statement.body);
     }
+
+    fn finalize(&mut self) {
+
+    }
 }

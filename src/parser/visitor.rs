@@ -139,6 +139,8 @@ pub trait ASTVisitor<'a> {
 
     fn visit_unary_expression(&mut self, unary_expression: &ASTUnaryExpression);
 
+    fn finalize(&mut self);
+
     fn visit_binary_expression(&mut self, binary_expression: &ASTBinaryExpression) {
         self.visit_expression(&binary_expression.left);
         self.visit_expression(&binary_expression.right);

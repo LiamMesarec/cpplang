@@ -3,10 +3,10 @@ use crate::tokenizer::TokenInfo;
 use std::collections::HashMap;
 use std::error::Error;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TypeInfo {
-    name: String,
-    library: String,
+    pub name: String,
+    pub library: String,
 }
 
 pub fn init_types() -> Result<HashMap<String, TypeInfo>, Box<dyn Error>> {
@@ -28,13 +28,13 @@ pub fn init_types() -> Result<HashMap<String, TypeInfo>, Box<dyn Error>> {
     Ok(hashmap)
 }
 
-pub fn translate_type(token_info: &TokenInfo, types: &HashMap<String, TypeInfo>) -> Option<String> {
+pub fn translate_type(token_info: &TokenInfo, types: &HashMap<String, TypeInfo>) -> Option<TypeInfo> {
     if token_info.token != Token::Identifier {
         return None;
     }
 
     return match types.get(&token_info.lexeme) {
-        Some(cpp_type) => Some(cpp_type.name.clone()),
+        Some(cpp_type) => Some(cpp_type.clone()),
         None => None,
     };
 }
