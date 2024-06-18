@@ -88,6 +88,7 @@ pub struct ASTWhileStatement {
 pub struct ASTForStatement {
     pub for_keyword: TokenInfo,
     pub identifier: TokenInfo,
+    pub type_annotation: Option<TokenInfo>,
     pub iterable: ASTExpression,
     pub body: Box<ASTStatement>,
 }
@@ -104,12 +105,14 @@ impl ASTForStatement {
     pub fn new(
         for_keyword: TokenInfo,
         identifier: TokenInfo,
+        type_annotation: Option<TokenInfo>,
         iterable: ASTExpression,
         body: ASTStatement,
     ) -> Self {
         ASTForStatement {
             for_keyword,
             identifier,
+            type_annotation,
             iterable,
             body: Box::new(body),
         }
@@ -181,12 +184,14 @@ impl ASTStatement {
     pub fn for_statement(
         for_keyword: TokenInfo,
         identifier: TokenInfo,
+        type_annotation: Option<TokenInfo>,
         iterable: ASTExpression,
         body: ASTStatement,
     ) -> Self {
         ASTStatement::new(ASTStatementKind::For(ASTForStatement::new(
             for_keyword,
             identifier,
+            type_annotation,
             iterable,
             body,
         )))

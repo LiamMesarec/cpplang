@@ -121,21 +121,19 @@ impl Node {
     fn parse_for_statement(&mut self) -> ASTStatement {
         let for_keyword = self.consume_and_check(Token::For).clone();
         let identifier = self.consume_and_check(Token::Identifier).clone();
+        let type_annotation = if self.peek(0).token == Token::Colon {
+            self.consume_and_check(Token::Colon);
+            Some(self.consume_and_check(Token::Identifier).clone())
+        } else {
+            None
+        };
+
         self.consume_and_check(Token::In);
 
         let iterable = self.parse_expression();
 
-        //print!("{:?}", iterable.kind);
         let body = self.parse_statement();
-        ASTStatement::for_statement(for_keyword, identifier, iterable, body)
-    }
-
-    fn parse_range_expression(&mut self) -> ASTExpression {
-        let start = self.parse_assignment_expression();
-
-        self.consume_and_check(Token::Range);
-        let end = self.parse_assignment_expression();
-        ASTExpression::range(Box::new(start), Box::new(end))
+        ASTStatement::for_statement(for_keyword, identifier, type_annotation, iterable, body)
     }
 
     fn parse_block_statement(&mut self) -> ASTStatement {
@@ -197,11 +195,10 @@ impl Node {
     }
 
     fn parse_expression(&mut self) -> ASTExpression {
-        if self.peek(1).token == Token::Range {
-            //TODO at some point bo to zgličal
-            return self.parse_range_expression();
+        if let Some(range_expr) = self.lookahead_for_range() {
+            return range_expr;
         }
-        if self.peek(0).token == Token::Std {
+        if self.current().token == Token::Std {
             let keyword = self.current().clone();
             self.consume_and_check(Token::Std);
             let double_colon = self.current().clone();
@@ -214,6 +211,22 @@ impl Node {
         self.parse_assignment_expression()
     }
 
+
+    fn lookahead_for_range(&mut self) -> Option<ASTExpression> {
+        let start_position = self.current.get_value();
+        let start_expr = self.parse_assignment_expression();
+
+        if self.current().token == Token::Range {
+            self.consume_and_check(Token::Range); // Consume the range token
+                                                println!("HERE");
+            let end_expr = self.parse_assignment_expression();
+            return Some(ASTExpression::range(Box::new(start_expr), Box::new(end_expr)));
+        } else {
+            self.current.value.set(start_position);
+                                                println!("HERE2");
+            return None;
+        }
+    }
     fn parse_assignment_expression(&mut self) -> ASTExpression {
         if self.current().token == Token::Identifier {
             if self.peek(1).token == Token::LeftSquareBracket {
@@ -327,6 +340,14 @@ impl Node {
                 } else {
                     ASTExpression::identifier(token)
                 }
+            }
+            Token::Std => {
+            let double_colon = self.current().clone();
+            self.consume_and_check(Token::DoubleColon);
+            let identifier = self.current().clone();
+            self.consume_and_check(Token::Identifier);
+
+             self.parse_std_call_expression(token, double_colon, identifier)
             }
             _ => panic!("Unexpected token: {:?}", token),
         }

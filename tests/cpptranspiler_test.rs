@@ -67,3 +67,52 @@ fn std_function_calls() {
 int32_t main() { std::println(\"hello\"); }"
     ));
 }
+
+#[test]
+fn for_range() {
+    assert!(evaluate_and_compare(
+        r#"
+    for i: i32 in 10..20 {
+        std::println("{}", i)
+    }
+"#,
+        "#include <cstdint>
+
+#include <print>
+for ( int32_t i = 10; i < 20; i++ ) { std::println(\"{}\", i); }"
+    ));
+
+    assert!(evaluate_and_compare(
+        r#"
+    for i: i32 in (l * 3)..(10 - 3) {
+        std::println("{}", i)
+    }
+"#,
+        "#include <cstdint>
+
+#include <print>
+for ( int32_t i = (l * 3); i < (10 - 3); i++ ) { std::println(\"{}\", i); }"
+    ));
+
+    assert!(evaluate_and_compare(
+        r#"
+    for i: i32 in array {
+        std::println("{}", i)
+    }
+"#,
+        "#include <cstdint>
+
+#include <print>
+for ( int32_t i : array ) { std::println(\"{}\", i); }"
+    ));
+
+        assert!(evaluate_and_compare(
+        r#"
+    for i in array {
+        std::println("{}", i)
+    }
+"#,
+        "#include <print>
+for ( auto i : array ) { std::println(\"{}\", i); }"
+    ));
+}

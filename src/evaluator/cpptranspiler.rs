@@ -81,13 +81,56 @@ impl ASTVisitor<'_> for ASTCppTranspiler {
 
     fn visit_for_statement(&mut self, for_statement: &ASTForStatement) {
         self.add_keyword("for");
+        self.add_whitespace();
         self.add_text("(");
-        self.add_text("auto");
+        self.add_whitespace();
+        if let Some(t) = &for_statement.type_annotation {
+            if let Some(cpp_t) = to_cpp::translate_type(&t, &self.types) {
+                self.add_text(&cpp_t.name);
+
+                if !self.includes.contains(&cpp_t.library) {
+                    self.includes.push(cpp_t.library);
+                }
+            } else {
+                self.add_text(&t.lexeme);
+            }
+        } else {
+            self.add_text("auto");
+        }
         self.add_whitespace();
         self.add_text(&for_statement.identifier.lexeme);
         self.add_whitespace();
-        self.add_text(":");
+
+        match &for_statement.iterable.kind {
+           ASTExpressionKind::Range(expr) => {
+        self.add_text("=");
+        self.add_whitespace();
+               self.visit_expression(&expr.start);
+               self.add_text(";");
+               self.add_whitespace();
+                self.add_text(&for_statement.identifier.lexeme);
+               self.add_whitespace();
+                self.add_text("<");
+               self.add_whitespace();
+               self.visit_expression(&expr.end);
+               self.add_text(";");
+               self.add_whitespace();
+                self.add_text(&for_statement.identifier.lexeme);
+               self.add_text("++");
+               self.add_whitespace();
+
+           },
+                      ASTExpressionKind::Variable(expr) => {        self.add_text(":");
+        self.add_whitespace();
+               self.visit_variable_expression(&expr);
+        self.add_whitespace();
+
+           },
+            _ => {}
+        }
         //tu je array
+        self.add_text(")");
+        self.add_text(" ");
         self.visit_statement(&for_statement.body);
     }
     fn visit_return_statement(&mut self, return_statement: &ASTReturnStatement) {
