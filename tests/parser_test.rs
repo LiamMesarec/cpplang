@@ -64,13 +64,13 @@ fn for_() {
 "#
     ));
 
-    /*assert!(is_parsable(
+    assert!(is_parsable(
             r#"
         for i in 0..9 {
             i
         }
     "#
-        ));*/
+        ));
 }
 
 #[test]
@@ -90,6 +90,22 @@ fn if_() {
     } else {
         i == 10
     }
+"#
+    ));
+}
+
+#[test]
+fn array() {
+    assert!(is_parsable(
+        r#"
+    a[i] = 1
+"#
+    ));
+
+    assert!(is_parsable(
+        r#"
+    a = [1*(10-2),2,3]
+    let i = 1
 "#
     ));
 }

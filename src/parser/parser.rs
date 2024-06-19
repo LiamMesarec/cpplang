@@ -217,13 +217,11 @@ impl Node {
         let start_expr = self.parse_assignment_expression();
 
         if self.current().token == Token::Range {
-            self.consume_and_check(Token::Range); // Consume the range token
-                                                println!("HERE");
+            self.consume_and_check(Token::Range);
             let end_expr = self.parse_assignment_expression();
             return Some(ASTExpression::range(Box::new(start_expr), Box::new(end_expr)));
         } else {
             self.current.value.set(start_position);
-                                                println!("HERE2");
             return None;
         }
     }
@@ -277,7 +275,6 @@ impl Node {
     }
 
     fn parse_array_expression(&mut self) -> ASTExpression {
-        self.consume_and_check(Token::LeftSquareBracket);
         let mut elements = Vec::new();
         while self.current().token != Token::RightSquareBracket && !self.is_at_end() {
             elements.push(self.parse_expression());
@@ -328,8 +325,7 @@ impl Node {
                 ASTExpression::parenthesized(expr)
             }
             Token::LeftSquareBracket => {
-                let array_expr = ASTExpression::identifier(token.clone());
-                self.parse_array_index_expression(array_expr)
+                self.parse_array_expression()
             }
             Token::Identifier => {
                 if self.current().token == Token::LeftParantheses {
