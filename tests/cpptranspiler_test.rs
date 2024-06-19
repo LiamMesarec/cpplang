@@ -106,7 +106,7 @@ for ( int32_t i = (l * 3); i < (10 - 3); i++ ) { std::println(\"{}\", i); }"
 for ( int32_t i : array ) { std::println(\"{}\", i); }"
     ));
 
-        assert!(evaluate_and_compare(
+    assert!(evaluate_and_compare(
         r#"
     for i in array {
         std::println("{}", i)
@@ -115,4 +115,30 @@ for ( int32_t i : array ) { std::println(\"{}\", i); }"
         "#include <print>
 for ( auto i : array ) { std::println(\"{}\", i); }"
     ));
+}
+
+#[test]
+fn array() {
+    assert!(evaluate_and_compare(
+        r#"
+        arr[i]
+    "#,
+        "arr[i]"
+    ));
+
+    assert!(evaluate_and_compare(
+        r#"
+        arr[i] = i - 10
+    "#,
+        "arr[i] = i - 10"
+    ));
+
+    /*assert!(evaluate_and_compare(
+        r#"
+        let arr: i32 = [1,2,3]
+    "#,
+        "#include <cstdint>
+const int32_t arr[3] = { 1, 2, 3 }"
+    ));*/
+
 }

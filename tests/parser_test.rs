@@ -65,12 +65,12 @@ fn for_() {
     ));
 
     assert!(is_parsable(
-            r#"
+        r#"
         for i in 0..9 {
             i
         }
     "#
-        ));
+    ));
 }
 
 #[test]
@@ -106,6 +106,7 @@ fn array() {
         r#"
     a = [1*(10-2),2,3]
     let i = 1
+    return a[i]
 "#
     ));
 }
@@ -124,7 +125,7 @@ fn match_() {
         r#"
     match i {
     	i => 1 == 3
-    	i  => 2 == 3
+    	i => 2 == 3
     }
 "#
     ));

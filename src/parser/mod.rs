@@ -261,6 +261,7 @@ pub enum ASTExpressionKind {
     Parenthesized(ASTParenthesizedExpression),
     Variable(ASTVariableExpression),
     Assignment(ASTAssignmentExpression),
+    ArrayAssignment(ASTArrayAssignmentExpression),
     Boolean(ASTBooleanExpression),
     Call(ASTCallExpression),
     StdCall(ASTStdCallExpression),
@@ -290,6 +291,14 @@ pub struct ASTAssignmentExpression {
     pub identifier: TokenInfo,
     pub expression: Box<ASTExpression>,
 }
+
+#[derive(Debug, Clone)]
+pub struct ASTArrayAssignmentExpression {
+    pub identifier: TokenInfo,
+    pub index_expression: Box<ASTExpression>,
+    pub expression: Box<ASTExpression>,
+}
+
 #[derive(Debug, Clone)]
 pub enum ASTUnaryOperatorKind {
     Subtraction,
@@ -449,6 +458,14 @@ impl ASTExpression {
     pub fn assignment(identifier: TokenInfo, expression: ASTExpression) -> Self {
         ASTExpression::new(ASTExpressionKind::Assignment(ASTAssignmentExpression {
             identifier,
+            expression: Box::new(expression),
+        }))
+    }
+
+    pub fn array_assignment(identifier: TokenInfo, index_expression: ASTExpression, expression: ASTExpression) -> Self {
+        ASTExpression::new(ASTExpressionKind::ArrayAssignment(ASTArrayAssignmentExpression {
+            identifier,
+            index_expression: Box::new(index_expression),
             expression: Box::new(expression),
         }))
     }

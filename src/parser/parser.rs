@@ -4,7 +4,7 @@ use ptree::{Style, TreeItem};
 use crate::parser::{
     ASTArrayExpression, ASTArrayIndexExpression, ASTBinaryOperator, ASTBinaryOperatorKind,
     ASTElseStatement, ASTExpression, ASTReturnStatement, ASTStatement, ASTUnaryExpression,
-    ASTUnaryOperator, ASTUnaryOperatorKind, Ast, FuncDeclParameter,
+    ASTUnaryOperator, ASTUnaryOperatorKind, Ast, FuncDeclParameter, ASTArrayAssignmentExpression
 };
 use std::borrow::Cow;
 use std::cell::Cell;
@@ -195,7 +195,7 @@ impl Node {
     }
 
     fn parse_expression(&mut self) -> ASTExpression {
-        if let Some(range_expr) = self.lookahead_for_range() {
+        if let Some(range_expr) = self.parse_range_expression_if_exists() {
             return range_expr;
         }
         if self.current().token == Token::Std {
@@ -211,29 +211,40 @@ impl Node {
         self.parse_assignment_expression()
     }
 
-
-    fn lookahead_for_range(&mut self) -> Option<ASTExpression> {
+    fn parse_range_expression_if_exists(&mut self) -> Option<ASTExpression> {
         let start_position = self.current.get_value();
         let start_expr = self.parse_assignment_expression();
 
         if self.current().token == Token::Range {
             self.consume_and_check(Token::Range);
             let end_expr = self.parse_assignment_expression();
-            return Some(ASTExpression::range(Box::new(start_expr), Box::new(end_expr)));
+            return Some(ASTExpression::range(
+                Box::new(start_expr),
+                Box::new(end_expr),
+            ));
         } else {
             self.current.value.set(start_position);
             return None;
         }
     }
+
     fn parse_assignment_expression(&mut self) -> ASTExpression {
         if self.current().token == Token::Identifier {
             if self.peek(1).token == Token::LeftSquareBracket {
+                            let current_state = self.current.get_value();
                 let identifier = self.consume_and_check(Token::Identifier).clone();
                 let array = ASTExpression::identifier(identifier.clone());
-                let array_index = self.parse_array_index_expression(array);
-                self.consume_and_check(Token::Assignment);
-                let expr = self.parse_expression();
-                return ASTExpression::assignment(identifier, array_index);
+                let index_expr = self.parse_array_index_expression(array);
+
+                if self.current().token == Token::Assignment {
+                    self.consume_and_check(Token::Assignment);
+                    let expr = self.parse_expression();
+                    return ASTExpression::array_assignment(identifier, index_expr, expr);
+                } else {
+                    self.current.value.set(current_state);
+                    let array = ASTExpression::identifier(self.consume_and_check(Token::Identifier).clone());
+                    return self.parse_array_index_expression(array);
+                }
             } else if self.peek(1).token == Token::Assignment {
                 let identifier = self.consume_and_check(Token::Identifier).clone();
                 self.consume_and_check(Token::Assignment);
@@ -324,9 +335,7 @@ impl Node {
                 self.consume_and_check(Token::RightParantheses);
                 ASTExpression::parenthesized(expr)
             }
-            Token::LeftSquareBracket => {
-                self.parse_array_expression()
-            }
+            Token::LeftSquareBracket => self.parse_array_expression(),
             Token::Identifier => {
                 if self.current().token == Token::LeftParantheses {
                     self.parse_call_expression(token)
@@ -338,12 +347,12 @@ impl Node {
                 }
             }
             Token::Std => {
-            let double_colon = self.current().clone();
-            self.consume_and_check(Token::DoubleColon);
-            let identifier = self.current().clone();
-            self.consume_and_check(Token::Identifier);
+                let double_colon = self.current().clone();
+                self.consume_and_check(Token::DoubleColon);
+                let identifier = self.current().clone();
+                self.consume_and_check(Token::Identifier);
 
-             self.parse_std_call_expression(token, double_colon, identifier)
+                self.parse_std_call_expression(token, double_colon, identifier)
             }
             _ => panic!("Unexpected token: {:?}", token),
         }

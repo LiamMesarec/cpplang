@@ -102,30 +102,29 @@ impl ASTVisitor<'_> for ASTCppTranspiler {
         self.add_whitespace();
 
         match &for_statement.iterable.kind {
-           ASTExpressionKind::Range(expr) => {
-        self.add_text("=");
-        self.add_whitespace();
-               self.visit_expression(&expr.start);
-               self.add_text(";");
-               self.add_whitespace();
+            ASTExpressionKind::Range(expr) => {
+                self.add_text("=");
+                self.add_whitespace();
+                self.visit_expression(&expr.start);
+                self.add_text(";");
+                self.add_whitespace();
                 self.add_text(&for_statement.identifier.lexeme);
-               self.add_whitespace();
+                self.add_whitespace();
                 self.add_text("<");
-               self.add_whitespace();
-               self.visit_expression(&expr.end);
-               self.add_text(";");
-               self.add_whitespace();
+                self.add_whitespace();
+                self.visit_expression(&expr.end);
+                self.add_text(";");
+                self.add_whitespace();
                 self.add_text(&for_statement.identifier.lexeme);
-               self.add_text("++");
-               self.add_whitespace();
-
-           },
-                      ASTExpressionKind::Variable(expr) => {        self.add_text(":");
-        self.add_whitespace();
-               self.visit_variable_expression(&expr);
-        self.add_whitespace();
-
-           },
+                self.add_text("++");
+                self.add_whitespace();
+            }
+            ASTExpressionKind::Variable(expr) => {
+                self.add_text(":");
+                self.add_whitespace();
+                self.visit_variable_expression(&expr);
+                self.add_whitespace();
+            }
             _ => {}
         }
         //tu je array
@@ -262,6 +261,36 @@ impl ASTVisitor<'_> for ASTCppTranspiler {
         self.visit_expression(&assignment_expression.expression);
         self.add_text(";");
     }
+
+    fn visit_array_assignment_expression(&mut self, array_assignment_expression: &ASTArrayAssignmentExpression) {
+        self.visit_expression(&array_assignment_expression.index_expression);
+        self.add_whitespace();
+        self.add_text("=");
+        self.add_whitespace();
+        self.visit_expression(&array_assignment_expression.expression);
+    }
+
+    fn visit_array_index_expression(&mut self, array_index_expression: &ASTArrayIndexExpression) {
+        self.visit_expression(&array_index_expression.array);
+        self.add_text("[");
+        self.visit_expression(&array_index_expression.index);
+        self.add_text("]");
+    }
+
+    fn visit_array_expression(&mut self, array_expression: &ASTArrayExpression) {
+        self.add_text("{");
+        let len = array_expression.elements.len();
+        for (index, element) in array_expression.elements.iter().enumerate() {
+            self.visit_expression(element);
+            if index < len - 1 {
+                self.add_text(",");
+                self.add_whitespace();
+            }
+        }
+        self.add_text("}");
+    }
+
+
 
     fn visit_variable_expression(&mut self, variable_expression: &ASTVariableExpression) {
         self.result

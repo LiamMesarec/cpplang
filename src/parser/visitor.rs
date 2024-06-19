@@ -4,7 +4,7 @@ use crate::parser::{
     ASTForStatement, ASTFuncDeclStatement, ASTIfStatement, ASTLetStatement, ASTNumberExpression,
     ASTParenthesizedExpression, ASTRangeExpression, ASTReturnStatement, ASTStatement,
     ASTStatementKind, ASTStdCallExpression, ASTStringExpression, ASTUnaryExpression,
-    ASTVariableExpression, ASTWhileStatement,
+    ASTVariableExpression, ASTWhileStatement, ASTArrayAssignmentExpression
 };
 
 pub trait ASTVisitor<'a> {
@@ -100,6 +100,9 @@ pub trait ASTVisitor<'a> {
             ASTExpressionKind::Assignment(expr) => {
                 self.visit_assignment_expression(expr);
             }
+            ASTExpressionKind::ArrayAssignment(expr) => {
+                self.visit_array_assignment_expression(expr);
+            }
             ASTExpressionKind::Boolean(expr) => {
                 self.visit_boolean_expression(expr);
             }
@@ -137,6 +140,10 @@ pub trait ASTVisitor<'a> {
 
     fn visit_assignment_expression(&mut self, assignment_expression: &ASTAssignmentExpression) {
         self.visit_expression(&assignment_expression.expression);
+    }
+
+    fn visit_array_assignment_expression(&mut self, array_assignment_expression: &ASTArrayAssignmentExpression) {
+        self.visit_expression(&array_assignment_expression.expression);
     }
 
     fn visit_range_expression(&mut self, range_expression: &ASTRangeExpression) {
