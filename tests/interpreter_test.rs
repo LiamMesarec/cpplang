@@ -39,7 +39,50 @@ fn assignment() {
 fn function() {
     assert!(evaluate_and_compare(
         r#"fn main(): u32 { 0 }"#,
-        "uint32_t main() { 0 }"
+        "0"
+    ));
+}
+
+#[test]
+#[ignore]
+fn fun_() {
+    assert!(evaluate_and_compare(
+        r#"
+        fn test(i : i64): i64 {
+        let f = i + 10
+        return f
+        }
+        
+        fn main(): i64 {
+        let i = 1
+        let v = 2
+        if ( 5 < 10 ) {
+        let a = i + 10
+        }
+        
+        int n = test(i)
+        std::println("noj", i, "koj", v)
+        
+        return n
+}
+        
+        
+"#,
+        "0"
+    ));
+}
+
+    
+#[test]
+#[ignore]
+fn for_() {
+    assert!(evaluate_and_compare(
+        r#"
+        for i in 0..5 {
+        }
+        
+"#,
+        "15"
     ));
 }
 
@@ -47,10 +90,18 @@ fn function() {
 fn if_() {
     assert!(evaluate_and_compare(
         r#"
-        let i = 0
+        let i = 1
+        let v = 2
         if ( 5 < 10 ) {
         let a = i + 10
         }
+        
+        v = 10
+
+        std::println("noj", i, "koj", v)
+        
+        return v
+
         
         
 "#,
