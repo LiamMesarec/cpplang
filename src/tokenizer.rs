@@ -39,6 +39,7 @@ pub enum Token {
     Std,
     Colon,
     DoubleColon,
+    Array,
     Comma,
     Number,
     Star,
@@ -275,6 +276,7 @@ fn assign_if_reserved_identifier(token_info: &TokenInfo) -> Token {
         "match" => Token::Match,
         "struct" => Token::Struct,
         "std" => Token::Std,
+        "Array" => Token::Array,
         _ => token_info.token,
     }
 }

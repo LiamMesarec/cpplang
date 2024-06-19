@@ -113,6 +113,37 @@ fn typenames() {
     ));
 
     assert!(tokenize_and_compare(
+        "Array<u16>",
+        &[
+            TokenInfo {
+                token: Token::Array,
+                lexeme: String::from("Array"),
+                                 start_position: Position { row: 1, col: 1 }
+            },
+            TokenInfo {
+                token: Token::LowerThan,
+                lexeme: String::from("<"),
+                                 start_position: Position { row: 1, col: 6 }
+            },
+            TokenInfo {
+                token: Token::Identifier,
+                lexeme: String::from("u16"),
+                                 start_position: Position { row: 1, col: 7 }
+            },
+            TokenInfo {
+                token: Token::GreaterThan,
+                lexeme: String::from(">"),
+                                 start_position: Position { row: 1, col: 10 }
+            },
+            TokenInfo {
+                token: Token::EOF,
+                lexeme: String::from(""),
+                                 start_position: Position { row: 1, col: 11 }
+            }
+        ]
+    ));
+
+    assert!(tokenize_and_compare(
         "u16\nu64 u32",
         &[
             TokenInfo {

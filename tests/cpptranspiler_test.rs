@@ -134,11 +134,22 @@ fn array() {
     ));
 
     /*assert!(evaluate_and_compare(
-        r#"
-        let arr: i32 = [1,2,3]
-    "#,
-        "#include <cstdint>
-const int32_t arr[3] = { 1, 2, 3 }"
-    ));*/
+            r#"
+            let arr: i32 = [1,2,3]
+        "#,
+            "#include <cstdint>
+    const int32_t arr[3] = { 1, 2, 3 }"
+        ));*/
+}
 
+
+#[test]
+fn generics() {
+    assert!(evaluate_and_compare(
+        r#"
+        let i: UserDefined<i32> = 10
+        "#,
+        "#include <cstdint>
+const UserDefined<int32_t> i = 10;"
+    ));
 }

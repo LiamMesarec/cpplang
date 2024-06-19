@@ -246,5 +246,9 @@ impl ASTVisitor<'_> for ASTInterpreter {
         }
     }
 
+    fn visit_type_annotation_expression(&mut self, type_annotation_expression: &ASTTypeAnnotationExpression) {
+
+    }
+
     fn finalize(&mut self) {}
 }

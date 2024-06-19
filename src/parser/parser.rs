@@ -2,9 +2,9 @@ use crate::tokenizer::{Token, TokenInfo};
 use ptree::{Style, TreeItem};
 
 use crate::parser::{
-    ASTArrayExpression, ASTArrayIndexExpression, ASTBinaryOperator, ASTBinaryOperatorKind,
-    ASTElseStatement, ASTExpression, ASTReturnStatement, ASTStatement, ASTUnaryExpression,
-    ASTUnaryOperator, ASTUnaryOperatorKind, Ast, FuncDeclParameter, ASTArrayAssignmentExpression
+    ASTArrayAssignmentExpression, ASTArrayExpression, ASTArrayIndexExpression, ASTBinaryOperator,
+    ASTBinaryOperatorKind, ASTElseStatement, ASTExpression, ASTReturnStatement, ASTStatement,
+    ASTUnaryExpression, ASTUnaryOperator, ASTUnaryOperatorKind, Ast, FuncDeclParameter, ASTTypeAnnotationExpression
 };
 use std::borrow::Cow;
 use std::cell::Cell;
@@ -78,7 +78,7 @@ impl Node {
         let parameters = self.parse_optional_parameter_list();
         let return_type = if self.peek(0).token == Token::Colon {
             self.consume_and_check(Token::Colon);
-            Some(self.consume_and_check(Token::Identifier).clone())
+            self.parse_type_annotation()
         } else {
             None
         };
@@ -96,7 +96,7 @@ impl Node {
             let identifier = self.consume_and_check(Token::Identifier).clone();
             let type_annotation = if self.peek(0).token == Token::Colon {
                 self.consume_and_check(Token::Colon);
-                Some(self.consume_and_check(Token::Identifier).clone())
+                self.parse_type_annotation()
             } else {
                 None
             };
@@ -123,7 +123,7 @@ impl Node {
         let identifier = self.consume_and_check(Token::Identifier).clone();
         let type_annotation = if self.peek(0).token == Token::Colon {
             self.consume_and_check(Token::Colon);
-            Some(self.consume_and_check(Token::Identifier).clone())
+            self.parse_type_annotation()
         } else {
             None
         };
@@ -163,6 +163,25 @@ impl Node {
         return None;
     }
 
+    pub fn parse_type_annotation(&mut self) -> Option<ASTExpression> {
+        let base = self.consume_and_check(Token::Identifier).clone();
+        let mut generics = Vec::new();
+
+        if self.current().token == Token::LowerThan {
+           self.consume_and_check(Token::LowerThan).clone();
+            while self.current().token != Token::GreaterThan {
+                let generic = self.consume_and_check(Token::Identifier).clone();
+                    generics.push(generic);
+            }
+           self.consume_and_check(Token::GreaterThan).clone();
+        }
+
+        return Some(ASTExpression::type_annotation(
+            base,
+            generics,
+        ));
+    }
+
     fn parse_let_statement(&mut self) -> ASTStatement {
         self.consume_and_check(Token::Let);
 
@@ -177,7 +196,7 @@ impl Node {
 
         let type_annotation = if self.peek(0).token == Token::Colon {
             self.consume_and_check(Token::Colon);
-            Some(self.consume_and_check(Token::Identifier).clone())
+            self.parse_type_annotation()
         } else {
             None
         };
@@ -231,7 +250,7 @@ impl Node {
     fn parse_assignment_expression(&mut self) -> ASTExpression {
         if self.current().token == Token::Identifier {
             if self.peek(1).token == Token::LeftSquareBracket {
-                            let current_state = self.current.get_value();
+                let current_state = self.current.get_value();
                 let identifier = self.consume_and_check(Token::Identifier).clone();
                 let array = ASTExpression::identifier(identifier.clone());
                 let index_expr = self.parse_array_index_expression(array);
@@ -242,7 +261,9 @@ impl Node {
                     return ASTExpression::array_assignment(identifier, index_expr, expr);
                 } else {
                     self.current.value.set(current_state);
-                    let array = ASTExpression::identifier(self.consume_and_check(Token::Identifier).clone());
+                    let array = ASTExpression::identifier(
+                        self.consume_and_check(Token::Identifier).clone(),
+                    );
                     return self.parse_array_index_expression(array);
                 }
             } else if self.peek(1).token == Token::Assignment {

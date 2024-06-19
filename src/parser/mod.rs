@@ -64,17 +64,24 @@ pub struct ASTReturnStatement {
     pub return_keyword: TokenInfo,
     pub return_value: Option<ASTExpression>,
 }
+
+#[derive(Debug, Clone)]
+pub struct ASTTypeAnnotationExpression {
+    pub base: TokenInfo,
+    pub generics: Vec<TokenInfo>,
+}
+
 #[derive(Debug, Clone)]
 pub struct FuncDeclParameter {
     pub identifier: TokenInfo,
-    pub type_annotation: Option<TokenInfo>,
+    pub type_annotation: Option<ASTExpression>,
 }
 
 #[derive(Debug, Clone)]
 pub struct ASTFuncDeclStatement {
     pub identifier: TokenInfo,
     pub parameters: Vec<FuncDeclParameter>,
-    pub type_annotation: Option<TokenInfo>,
+    pub type_annotation: Option<ASTExpression>,
     pub body: Box<ASTStatement>,
 }
 #[derive(Debug, Clone)]
@@ -88,7 +95,7 @@ pub struct ASTWhileStatement {
 pub struct ASTForStatement {
     pub for_keyword: TokenInfo,
     pub identifier: TokenInfo,
-    pub type_annotation: Option<TokenInfo>,
+    pub type_annotation: Option<ASTExpression>,
     pub iterable: ASTExpression,
     pub body: Box<ASTStatement>,
 }
@@ -105,7 +112,7 @@ impl ASTForStatement {
     pub fn new(
         for_keyword: TokenInfo,
         identifier: TokenInfo,
-        type_annotation: Option<TokenInfo>,
+        type_annotation: Option<ASTExpression>,
         iterable: ASTExpression,
         body: ASTStatement,
     ) -> Self {
@@ -150,7 +157,7 @@ pub struct ASTIfStatement {
 pub struct ASTLetStatement {
     pub is_mut: bool,
     pub identifier: TokenInfo,
-    pub type_annotation: Option<TokenInfo>,
+    pub type_annotation: Option<ASTExpression>,
     pub initializer: ASTExpression,
 }
 
@@ -169,7 +176,7 @@ impl ASTStatement {
 
     pub fn let_statement(
         identifier: TokenInfo,
-        type_annotation: Option<TokenInfo>,
+        type_annotation: Option<ASTExpression>,
         is_mut: bool,
         initializer: ASTExpression,
     ) -> Self {
@@ -184,7 +191,7 @@ impl ASTStatement {
     pub fn for_statement(
         for_keyword: TokenInfo,
         identifier: TokenInfo,
-        type_annotation: Option<TokenInfo>,
+        type_annotation: Option<ASTExpression>,
         iterable: ASTExpression,
         body: ASTStatement,
     ) -> Self {
@@ -240,7 +247,7 @@ impl ASTStatement {
     pub fn func_decl_statement(
         identifier: TokenInfo,
         parameters: Vec<FuncDeclParameter>,
-        type_annotation: Option<TokenInfo>,
+        type_annotation: Option<ASTExpression>,
         body: ASTStatement,
     ) -> Self {
         ASTStatement::new(ASTStatementKind::FuncDecl(ASTFuncDeclStatement {
@@ -268,6 +275,7 @@ pub enum ASTExpressionKind {
     Range(ASTRangeExpression),
     Array(ASTArrayExpression),
     ArrayIndex(ASTArrayIndexExpression),
+    TypeAnnotation(ASTTypeAnnotationExpression),
 }
 
 #[derive(Debug, Clone)]
@@ -462,12 +470,18 @@ impl ASTExpression {
         }))
     }
 
-    pub fn array_assignment(identifier: TokenInfo, index_expression: ASTExpression, expression: ASTExpression) -> Self {
-        ASTExpression::new(ASTExpressionKind::ArrayAssignment(ASTArrayAssignmentExpression {
-            identifier,
-            index_expression: Box::new(index_expression),
-            expression: Box::new(expression),
-        }))
+    pub fn array_assignment(
+        identifier: TokenInfo,
+        index_expression: ASTExpression,
+        expression: ASTExpression,
+    ) -> Self {
+        ASTExpression::new(ASTExpressionKind::ArrayAssignment(
+            ASTArrayAssignmentExpression {
+                identifier,
+                index_expression: Box::new(index_expression),
+                expression: Box::new(expression),
+            },
+        ))
     }
 
     pub fn boolean(token: TokenInfo, value: bool) -> Self {
@@ -511,6 +525,12 @@ impl ASTExpression {
     pub fn array_index(array: Box<ASTExpression>, index: Box<ASTExpression>) -> Self {
         ASTExpression {
             kind: ASTExpressionKind::ArrayIndex(ASTArrayIndexExpression { array, index }),
+        }
+    }
+
+    pub fn type_annotation(base: TokenInfo, generics: Vec<TokenInfo>) -> Self {
+        ASTExpression {
+            kind: ASTExpressionKind::TypeAnnotation(ASTTypeAnnotationExpression { base, generics }),
         }
     }
 }

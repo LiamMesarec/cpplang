@@ -39,23 +39,49 @@ impl ASTCppTranspiler {
             includes: Vec::new(),
         }
     }
-}
 
-impl ASTVisitor<'_> for ASTCppTranspiler {
-    fn visit_func_decl_statement(&mut self, func_decl_statement: &ASTFuncDeclStatement) {
-        if let Some(t) = &func_decl_statement.type_annotation {
-            if let Some(cpp_t) = to_cpp::translate_type(&t, &self.types) {
-                self.add_text(&cpp_t.name);
 
-                if !self.includes.contains(&cpp_t.library) {
-                    self.includes.push(cpp_t.library);
+    fn add_type_annotation(&mut self, type_annotation: &Option<ASTExpression>) {
+        if let Some(t) = type_annotation {
+            match &t.kind {
+                ASTExpressionKind::TypeAnnotation(expr) => {
+                    if let Some(cpp_t) = to_cpp::translate_type(&expr.base, &self.types) {
+                        self.add_text(&cpp_t.name);
+
+                        if !self.includes.contains(&cpp_t.library) {
+                            self.includes.push(cpp_t.library);
+                        }
+                    } else {
+                        self.add_text(&expr.base.lexeme);
+                    }
+
+                    for generic in &expr.generics {
+                        self.add_text("<");
+                    if let Some(cpp_t) = to_cpp::translate_type(&generic, &self.types) {
+                        self.add_text(&cpp_t.name);
+
+                        if !self.includes.contains(&cpp_t.library) {
+                            self.includes.push(cpp_t.library);
+                        }
+                    } else {
+                        self.add_text(&expr.base.lexeme);
+                    }
+
+                        self.add_text(">");
+                    }
                 }
-            } else {
-                self.add_text(&t.lexeme);
+                _ => {}
             }
         } else {
             self.add_text("auto");
         }
+    }
+}
+
+impl ASTVisitor<'_> for ASTCppTranspiler {
+    fn visit_func_decl_statement(&mut self, func_decl_statement: &ASTFuncDeclStatement) {
+
+        self.add_type_annotation(&func_decl_statement.type_annotation);
         self.add_whitespace();
         self.add_text(&func_decl_statement.identifier.lexeme);
         let are_parameters_empty = func_decl_statement.parameters.is_empty();
@@ -84,19 +110,9 @@ impl ASTVisitor<'_> for ASTCppTranspiler {
         self.add_whitespace();
         self.add_text("(");
         self.add_whitespace();
-        if let Some(t) = &for_statement.type_annotation {
-            if let Some(cpp_t) = to_cpp::translate_type(&t, &self.types) {
-                self.add_text(&cpp_t.name);
 
-                if !self.includes.contains(&cpp_t.library) {
-                    self.includes.push(cpp_t.library);
-                }
-            } else {
-                self.add_text(&t.lexeme);
-            }
-        } else {
-            self.add_text("auto");
-        }
+        self.add_type_annotation(&for_statement.type_annotation);
+
         self.add_whitespace();
         self.add_text(&for_statement.identifier.lexeme);
         self.add_whitespace();
@@ -182,19 +198,7 @@ impl ASTVisitor<'_> for ASTCppTranspiler {
             self.add_whitespace();
         }
 
-        if let Some(t) = &let_statement.type_annotation {
-            if let Some(cpp_t) = to_cpp::translate_type(&t, &self.types) {
-                self.add_text(&cpp_t.name);
-
-                if !self.includes.contains(&cpp_t.library) {
-                    self.includes.push(cpp_t.library);
-                }
-            } else {
-                self.add_text(&t.lexeme);
-            }
-        } else {
-            self.add_text("auto");
-        }
+        self.add_type_annotation(&let_statement.type_annotation);
         self.add_whitespace();
 
         self.add_text(let_statement.identifier.lexeme.as_str());
@@ -262,7 +266,10 @@ impl ASTVisitor<'_> for ASTCppTranspiler {
         self.add_text(";");
     }
 
-    fn visit_array_assignment_expression(&mut self, array_assignment_expression: &ASTArrayAssignmentExpression) {
+    fn visit_array_assignment_expression(
+        &mut self,
+        array_assignment_expression: &ASTArrayAssignmentExpression,
+    ) {
         self.visit_expression(&array_assignment_expression.index_expression);
         self.add_whitespace();
         self.add_text("=");
@@ -289,8 +296,6 @@ impl ASTVisitor<'_> for ASTCppTranspiler {
         }
         self.add_text("}");
     }
-
-
 
     fn visit_variable_expression(&mut self, variable_expression: &ASTVariableExpression) {
         self.result
@@ -331,6 +336,10 @@ impl ASTVisitor<'_> for ASTCppTranspiler {
         self.result.push_str(&format!("{}", "(",));
         self.visit_expression(&parenthesized_expression.expression);
         self.result.push_str(&format!("{}", ")",));
+    }
+
+    fn visit_type_annotation_expression(&mut self, type_annotation_expression: &ASTTypeAnnotationExpression) {
+
     }
 
     fn finalize(&mut self) {
