@@ -32,6 +32,12 @@ fn assignment() {
         "#include <cstdint>
 const uint32_t i = u - 10 * (i);"
     ));
+
+    assert!(evaluate_and_compare(
+        r#"i = 10
+        j = 20"#,
+        "i = 10;j = 20;"
+    ));
 }
 
 #[test]
@@ -130,16 +136,23 @@ fn array() {
         r#"
         arr[i] = i - 10
     "#,
-        "arr[i] = i - 10"
+        "arr[i] = i - 10;"
     ));
 
-    /*assert!(evaluate_and_compare(
+    assert!(evaluate_and_compare(
             r#"
             let arr: Array<i32> = [1,2,3]
         "#,
             "#include <cstdint>
-    const int32_t arr[3] = { 1, 2, 3 }"
-        ));*/
+const int32_t arr[] = { 1, 2, 3 };"
+        ));
+
+    /*assert!(evaluate_and_compare(
+        r#"
+        arr[i] > arr[i + 1]
+        "#,
+        "#arr[i] > arr[i + 1]"
+    ));*/
 }
 
 #[test]

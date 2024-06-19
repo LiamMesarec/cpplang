@@ -10,6 +10,12 @@ pub struct ASTCppTranspiler {
     includes: Vec<String>,
 }
 
+#[derive(PartialEq)]
+enum AfterIdentifier {
+    None,
+    Array
+}
+
 impl ASTCppTranspiler {
     fn add_whitespace(&mut self) {
         self.result.push_str(" ");
@@ -40,22 +46,33 @@ impl ASTCppTranspiler {
         }
     }
 
-    fn add_type_annotation(&mut self, type_annotation: &Option<ASTExpression>) {
+    fn add_type_annotation(&mut self, type_annotation: &Option<ASTExpression>) -> AfterIdentifier {
+        let mut after_identifier = AfterIdentifier::None;
         if let Some(t) = type_annotation {
             match &t.kind {
                 ASTExpressionKind::TypeAnnotation(expr) => {
                     if let Some(cpp_t) = to_cpp::translate_type(&expr.base, &self.types) {
-                        self.add_text(&cpp_t.name);
+                        if &cpp_t.name == "Array"  {
+                            after_identifier = AfterIdentifier::Array;
+                        } else {
+                            self.add_text(&cpp_t.name);
+                        }
 
                         if !self.includes.contains(&cpp_t.library) {
                             self.includes.push(cpp_t.library);
                         }
                     } else {
-                        self.add_text(&expr.base.lexeme);
+                        if &expr.base.lexeme == "Array"  {
+                            after_identifier = AfterIdentifier::Array;
+                        } else {
+                            self.add_text(&expr.base.lexeme);
+                        }
                     }
 
                     for generic in &expr.generics {
-                        self.add_text("<");
+                        if after_identifier == AfterIdentifier::None {
+                            self.add_text("<");
+                        }
                         if let Some(cpp_t) = to_cpp::translate_type(&generic, &self.types) {
                             self.add_text(&cpp_t.name);
 
@@ -66,7 +83,10 @@ impl ASTCppTranspiler {
                             self.add_text(&expr.base.lexeme);
                         }
 
-                        self.add_text(">");
+                        if after_identifier == AfterIdentifier::None {
+                            self.add_text(">");
+                        }
+
                     }
                 }
                 _ => {}
@@ -74,6 +94,8 @@ impl ASTCppTranspiler {
         } else {
             self.add_text("auto");
         }
+
+        return after_identifier;
     }
 }
 
@@ -196,10 +218,22 @@ impl ASTVisitor<'_> for ASTCppTranspiler {
             self.add_whitespace();
         }
 
-        self.add_type_annotation(&let_statement.type_annotation);
+        match self.add_type_annotation(&let_statement.type_annotation) {
+            AfterIdentifier::Array => {
         self.add_whitespace();
 
         self.add_text(let_statement.identifier.lexeme.as_str());
+            self.add_text("[]");
+
+            }
+            AfterIdentifier::None => {
+        self.add_whitespace();
+
+        self.add_text(let_statement.identifier.lexeme.as_str());
+            }
+        }
+
+
         self.add_whitespace();
         self.add_text("=");
         self.add_whitespace();
@@ -273,6 +307,7 @@ impl ASTVisitor<'_> for ASTCppTranspiler {
         self.add_text("=");
         self.add_whitespace();
         self.visit_expression(&array_assignment_expression.expression);
+        self.add_text(";");
     }
 
     fn visit_array_index_expression(&mut self, array_index_expression: &ASTArrayIndexExpression) {
