@@ -37,10 +37,7 @@ fn assignment() {
 #[test]
 #[ignore]
 fn function() {
-    assert!(evaluate_and_compare(
-        r#"fn main(): u32 { 0 }"#,
-        "0"
-    ));
+    assert!(evaluate_and_compare(r#"fn main(): u32 { 0 }"#, "0"));
 }
 
 #[test]
@@ -72,7 +69,6 @@ fn fun_() {
     ));
 }
 
-    
 #[test]
 #[ignore]
 fn for_() {

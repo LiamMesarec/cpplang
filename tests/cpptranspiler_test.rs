@@ -135,13 +135,12 @@ fn array() {
 
     /*assert!(evaluate_and_compare(
             r#"
-            let arr: i32 = [1,2,3]
+            let arr: Array<i32> = [1,2,3]
         "#,
             "#include <cstdint>
     const int32_t arr[3] = { 1, 2, 3 }"
         ));*/
 }
-
 
 #[test]
 fn generics() {

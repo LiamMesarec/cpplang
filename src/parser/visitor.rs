@@ -4,7 +4,8 @@ use crate::parser::{
     ASTCallExpression, ASTExpression, ASTExpressionKind, ASTForStatement, ASTFuncDeclStatement,
     ASTIfStatement, ASTLetStatement, ASTNumberExpression, ASTParenthesizedExpression,
     ASTRangeExpression, ASTReturnStatement, ASTStatement, ASTStatementKind, ASTStdCallExpression,
-    ASTStringExpression, ASTUnaryExpression, ASTVariableExpression, ASTWhileStatement, ASTTypeAnnotationExpression
+    ASTStringExpression, ASTTypeAnnotationExpression, ASTUnaryExpression, ASTVariableExpression,
+    ASTWhileStatement,
 };
 
 pub trait ASTVisitor<'a> {
@@ -68,7 +69,6 @@ pub trait ASTVisitor<'a> {
             self.visit_statement(&else_branch.else_statement);
         }
     }
-
 
     fn visit_let_statement(&mut self, let_statement: &ASTLetStatement);
     fn visit_statement(&mut self, statement: &ASTStatement) {
@@ -167,7 +167,10 @@ pub trait ASTVisitor<'a> {
 
     fn visit_unary_expression(&mut self, unary_expression: &ASTUnaryExpression);
 
-    fn visit_type_annotation_expression(&mut self, type_annotation_expression: &ASTTypeAnnotationExpression);
+    fn visit_type_annotation_expression(
+        &mut self,
+        type_annotation_expression: &ASTTypeAnnotationExpression,
+    );
 
     fn finalize(&mut self);
 

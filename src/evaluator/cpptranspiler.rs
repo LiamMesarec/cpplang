@@ -40,7 +40,6 @@ impl ASTCppTranspiler {
         }
     }
 
-
     fn add_type_annotation(&mut self, type_annotation: &Option<ASTExpression>) {
         if let Some(t) = type_annotation {
             match &t.kind {
@@ -57,15 +56,15 @@ impl ASTCppTranspiler {
 
                     for generic in &expr.generics {
                         self.add_text("<");
-                    if let Some(cpp_t) = to_cpp::translate_type(&generic, &self.types) {
-                        self.add_text(&cpp_t.name);
+                        if let Some(cpp_t) = to_cpp::translate_type(&generic, &self.types) {
+                            self.add_text(&cpp_t.name);
 
-                        if !self.includes.contains(&cpp_t.library) {
-                            self.includes.push(cpp_t.library);
+                            if !self.includes.contains(&cpp_t.library) {
+                                self.includes.push(cpp_t.library);
+                            }
+                        } else {
+                            self.add_text(&expr.base.lexeme);
                         }
-                    } else {
-                        self.add_text(&expr.base.lexeme);
-                    }
 
                         self.add_text(">");
                     }
@@ -80,7 +79,6 @@ impl ASTCppTranspiler {
 
 impl ASTVisitor<'_> for ASTCppTranspiler {
     fn visit_func_decl_statement(&mut self, func_decl_statement: &ASTFuncDeclStatement) {
-
         self.add_type_annotation(&func_decl_statement.type_annotation);
         self.add_whitespace();
         self.add_text(&func_decl_statement.identifier.lexeme);
@@ -286,6 +284,7 @@ impl ASTVisitor<'_> for ASTCppTranspiler {
 
     fn visit_array_expression(&mut self, array_expression: &ASTArrayExpression) {
         self.add_text("{");
+        self.add_whitespace();
         let len = array_expression.elements.len();
         for (index, element) in array_expression.elements.iter().enumerate() {
             self.visit_expression(element);
@@ -294,6 +293,7 @@ impl ASTVisitor<'_> for ASTCppTranspiler {
                 self.add_whitespace();
             }
         }
+        self.add_whitespace();
         self.add_text("}");
     }
 
@@ -338,8 +338,10 @@ impl ASTVisitor<'_> for ASTCppTranspiler {
         self.result.push_str(&format!("{}", ")",));
     }
 
-    fn visit_type_annotation_expression(&mut self, type_annotation_expression: &ASTTypeAnnotationExpression) {
-
+    fn visit_type_annotation_expression(
+        &mut self,
+        type_annotation_expression: &ASTTypeAnnotationExpression,
+    ) {
     }
 
     fn finalize(&mut self) {

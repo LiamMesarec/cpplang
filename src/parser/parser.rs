@@ -4,7 +4,8 @@ use ptree::{Style, TreeItem};
 use crate::parser::{
     ASTArrayAssignmentExpression, ASTArrayExpression, ASTArrayIndexExpression, ASTBinaryOperator,
     ASTBinaryOperatorKind, ASTElseStatement, ASTExpression, ASTReturnStatement, ASTStatement,
-    ASTUnaryExpression, ASTUnaryOperator, ASTUnaryOperatorKind, Ast, FuncDeclParameter, ASTTypeAnnotationExpression
+    ASTTypeAnnotationExpression, ASTUnaryExpression, ASTUnaryOperator, ASTUnaryOperatorKind, Ast,
+    FuncDeclParameter,
 };
 use std::borrow::Cow;
 use std::cell::Cell;
@@ -168,18 +169,15 @@ impl Node {
         let mut generics = Vec::new();
 
         if self.current().token == Token::LowerThan {
-           self.consume_and_check(Token::LowerThan).clone();
+            self.consume_and_check(Token::LowerThan).clone();
             while self.current().token != Token::GreaterThan {
                 let generic = self.consume_and_check(Token::Identifier).clone();
-                    generics.push(generic);
+                generics.push(generic);
             }
-           self.consume_and_check(Token::GreaterThan).clone();
+            self.consume_and_check(Token::GreaterThan).clone();
         }
 
-        return Some(ASTExpression::type_annotation(
-            base,
-            generics,
-        ));
+        return Some(ASTExpression::type_annotation(base, generics));
     }
 
     fn parse_let_statement(&mut self) -> ASTStatement {
