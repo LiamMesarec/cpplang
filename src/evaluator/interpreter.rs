@@ -37,7 +37,6 @@ impl ASTInterpreter {
         }
     }
 
-    // Helper function to evaluate an expression and return its value
     fn evaluate_expression(&mut self, expression: &ASTExpression) -> VariableType {
         self.visit_expression(expression);
         self.last_value.clone().unwrap()
@@ -51,6 +50,82 @@ impl ASTInterpreter {
         self.variables
             .insert(assignment_expr.identifier.lexeme.clone(), value.clone());
         value
+    }
+
+    fn evaluate_range_expression(&mut self, range_expr: &ASTRangeExpression) -> VariableType {
+        let start = if let VariableType::Number(n) = self.evaluate_expression(&range_expr.start) {
+            n
+        } else {
+            panic!("Range start is not a number")
+        };
+
+        let end = if let VariableType::Number(n) = self.evaluate_expression(&range_expr.end) {
+            n
+        } else {
+            panic!("Range end is not a number")
+        };
+
+        let range: Vec<VariableType> = (start..end).map(VariableType::Number).collect();
+        VariableType::Array(range)
+    }
+
+    fn evaluate_array_expression(&mut self, array_expr: &ASTArrayExpression) -> VariableType {
+        let elements: Vec<VariableType> = array_expr
+            .elements
+            .iter()
+            .map(|e| self.evaluate_expression(e))
+            .collect();
+        VariableType::Array(elements)
+    }
+
+    fn evaluate_array_index_expression(
+        &mut self,
+        array_index_expr: &ASTArrayIndexExpression,
+    ) -> VariableType {
+        if let VariableType::Array(array) = self.evaluate_expression(&array_index_expr.array) {
+            if let VariableType::Number(index) = self.evaluate_expression(&array_index_expr.index) {
+                array[index as usize].clone()
+            } else {
+                panic!("Array index is not a number")
+            }
+        } else {
+            panic!("Array index applied to non-array")
+        }
+    }
+
+    fn evaluate_array_assignment_expression(
+        &mut self,
+        array_assignment_expr: &ASTArrayAssignmentExpression,
+    ) -> VariableType {
+        if let ASTExpressionKind::ArrayIndex(array_index_expr) =
+            &array_assignment_expr.index_expression.kind
+        {
+            let array_var = &array_index_expr.array;
+            if let ASTExpressionKind::Variable(variable_expr) = &array_var.kind {
+                let array_name = &variable_expr.identifier.lexeme;
+                if let Some(VariableType::Array(mut array)) =
+                    self.variables.get(array_name).cloned()
+                {
+                    if let VariableType::Number(index) =
+                        self.evaluate_expression(&array_index_expr.index)
+                    {
+                        let value = self.evaluate_expression(&array_assignment_expr.expression);
+                        array[index as usize] = value.clone();
+                        self.variables
+                            .insert(array_name.clone(), VariableType::Array(array));
+                        return value;
+                    } else {
+                        panic!("Array index is not a number")
+                    }
+                } else {
+                    panic!("Array assignment applied to non-array")
+                }
+            } else {
+                panic!("Expected variable for array assignment")
+            }
+        } else {
+            panic!("Expected array index expression for array assignment")
+        }
     }
 }
 
@@ -90,8 +165,15 @@ impl ASTVisitor<'_> for ASTInterpreter {
             ASTExpressionKind::Assignment(assignment_expr) => {
                 self.visit_assignment_expression(assignment_expr)
             }
-            // Add other expression types here
-            _ => unimplemented!("Unsupported expression type"),
+            ASTExpressionKind::Range(range_expr) => self.visit_range_expression(range_expr),
+            ASTExpressionKind::Array(array_expr) => self.visit_array_expression(array_expr),
+            ASTExpressionKind::ArrayIndex(array_index_expr) => {
+                self.visit_array_index_expression(array_index_expr)
+            }
+            ASTExpressionKind::ArrayAssignment(array_assignment_expr) => {
+                self.visit_array_assignment_expression(array_assignment_expr)
+            }
+            _ => unimplemented!("Unsupported expression type {:?}", &expression.kind),
         }
     }
 
@@ -100,6 +182,28 @@ impl ASTVisitor<'_> for ASTInterpreter {
         self.last_value = Some(value);
     }
 
+    fn visit_range_expression(&mut self, range_expr: &ASTRangeExpression) {
+        let value = self.evaluate_range_expression(range_expr);
+        self.last_value = Some(value);
+    }
+
+    fn visit_array_expression(&mut self, array_expr: &ASTArrayExpression) {
+        let value = self.evaluate_array_expression(array_expr);
+        self.last_value = Some(value);
+    }
+
+    fn visit_array_index_expression(&mut self, array_index_expr: &ASTArrayIndexExpression) {
+        let value = self.evaluate_array_index_expression(array_index_expr);
+        self.last_value = Some(value);
+    }
+
+    fn visit_array_assignment_expression(
+        &mut self,
+        array_assignment_expr: &ASTArrayAssignmentExpression,
+    ) {
+        let value = self.evaluate_array_assignment_expression(array_assignment_expr);
+        self.last_value = Some(value);
+    }
     fn visit_boolean_expression(&mut self, boolean: &ASTBooleanExpression) {
         // Implementation for visiting boolean expressions
     }
@@ -221,15 +325,18 @@ impl ASTVisitor<'_> for ASTInterpreter {
     }
 
     fn visit_for_statement(&mut self, for_statement: &ASTForStatement) {
-        // For now, let's just print the for statement
-        println!("For statement:");
-        println!("Identifier: {:?}", for_statement.identifier);
-        println!("Iterable:");
-        self.visit_expression(&for_statement.iterable);
-        println!("Body:");
-        self.visit_statement(&for_statement.body);
-    }
+        let iterable = self.evaluate_expression(&for_statement.iterable);
 
+        if let VariableType::Array(elements) = iterable {
+            for element in elements {
+                self.variables
+                    .insert(for_statement.identifier.lexeme.clone(), element);
+                self.visit_statement(&for_statement.body);
+            }
+        } else {
+            panic!("For statement iterable is not an array");
+        }
+    }
     fn visit_std_call_expression(&mut self, std_call_expr: &ASTStdCallExpression) {
         if std_call_expr.identifier.lexeme == "println" {
             let args: Vec<String> = std_call_expr
@@ -245,7 +352,6 @@ impl ASTVisitor<'_> for ASTInterpreter {
             unimplemented!("Unsupported std call type");
         }
     }
-
     fn visit_type_annotation_expression(
         &mut self,
         type_annotation_expression: &ASTTypeAnnotationExpression,

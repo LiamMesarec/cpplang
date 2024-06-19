@@ -68,19 +68,64 @@ fn fun_() {
         "0"
     ));
 }
-
 #[test]
-#[ignore]
+fn arr_() {
+    assert!(evaluate_and_compare(
+        r#"
+let mut arr: Array<i32> = [5, 6, 7, 3, 10]
+        let i = 1
+        return arr[i]
+"#,
+        "6"
+    ));
+}
+#[test]
 fn for_() {
     assert!(evaluate_and_compare(
         r#"
-        for i in 0..5 {
+        let i = 0
+        let m = 0
+        for i in 1..5 {
+        	m = i + m
+        	std::println("i in loop ", i)
         }
-        
+        return m
 "#,
-        "15"
+        "10"
     ));
 }
+
+
+#[test]
+fn sort_() {
+    assert!(evaluate_and_compare(
+        r#"
+let mut arr: Array<i32> = [5, 6, 7, 3, 10]
+let n = 5
+let i = 0
+let j = 0
+
+for i in 0..n-1 {
+    let tmp = n - 1
+    for j in 0..tmp-i {
+        let left = arr[j]
+        let right = arr[j + 1]
+        if left > right {
+            arr[j] = right
+            arr[j + 1] = left
+        }
+    }
+}
+let n = 5
+for i in 0..n {
+    std::println(i, " " ,arr[i])
+}
+return arr
+"#,
+        "[3, 5, 6, 7, 10]"
+    ));
+}
+
 
 #[test]
 fn if_() {
@@ -92,7 +137,7 @@ fn if_() {
         let a = i + 10
         }
         
-        v = 10
+        v = 10 + i
 
         std::println("noj", i, "koj", v)
         
@@ -101,6 +146,6 @@ fn if_() {
         
         
 "#,
-        "10"
+        "11"
     ));
 }
