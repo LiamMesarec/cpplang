@@ -1,15 +1,11 @@
 use crate::tokenizer::{Token, TokenInfo};
-use ptree::{Style, TreeItem};
 
 use crate::parser::{
-    ASTArrayAssignmentExpression, ASTArrayExpression, ASTArrayIndexExpression, ASTBinaryOperator,
-    ASTBinaryOperatorKind, ASTElseStatement, ASTExpression, ASTReturnStatement, ASTStatement,
-    ASTTypeAnnotationExpression, ASTUnaryExpression, ASTUnaryOperator, ASTUnaryOperatorKind, Ast,
+    ASTBinaryOperator,
+    ASTBinaryOperatorKind, ASTElseStatement, ASTExpression, ASTStatement, ASTUnaryOperator, ASTUnaryOperatorKind,
     FuncDeclParameter,
 };
-use std::borrow::Cow;
 use std::cell::Cell;
-use std::io::Write;
 
 pub struct Counter {
     value: Cell<usize>,
@@ -169,12 +165,12 @@ impl Node {
         let mut generics = Vec::new();
 
         if self.current().token == Token::LowerThan {
-            self.consume_and_check(Token::LowerThan).clone();
+            self.consume_and_check(Token::LowerThan);
             while self.current().token != Token::GreaterThan {
                 let generic = self.consume_and_check(Token::Identifier).clone();
                 generics.push(generic);
             }
-            self.consume_and_check(Token::GreaterThan).clone();
+            self.consume_and_check(Token::GreaterThan);
         }
 
         return Some(ASTExpression::type_annotation(base, generics));

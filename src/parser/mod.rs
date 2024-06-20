@@ -1,6 +1,6 @@
 use crate::parser::parser::Node;
 use crate::parser::visitor::ASTVisitor;
-use crate::tokenizer::{Token, TokenInfo};
+use crate::tokenizer::{TokenInfo};
 
 pub mod parser;
 pub mod visitor;

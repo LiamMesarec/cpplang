@@ -1,6 +1,4 @@
 use rust::parser;
-use rust::parser::parser::Node;
-use rust::parser::Ast;
 use rust::tokenizer;
 use std::io::Cursor;
 
